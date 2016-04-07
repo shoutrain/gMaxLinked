@@ -1,3 +1,6 @@
-autom4te.cache/
 *.out
 *.o
+autom4te.cache/
+.autotools
+.cproject
+.project
