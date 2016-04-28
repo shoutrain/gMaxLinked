@@ -2,9 +2,9 @@
  ============================================================================
  Name        : gLink.cpp
  Author      : Rafael Gu
- Version     :
+ Version     : 1.0
  Copyright   : GPL
- Description : Hello World in C++,
+ Description : gLink Application Entry
  ============================================================================
  */
 
