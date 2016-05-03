@@ -1,10 +1,10 @@
 /*
  ============================================================================
- Name        : gLink.cpp
+ Name        : gMaxLinked.cpp
  Author      : Rafael Gu
  Version     : 1.0
  Copyright   : GPL
- Description : gLink Application Entry
+ Description : gMaxLinked Application Entry
  ============================================================================
  */
 
@@ -25,10 +25,10 @@
 #include <sys/types.h>
 #include <sys/syslog.h>
 
-const char DAEMON_NAME[] = "glink";
+const char DAEMON_NAME[] = "gMaxLinked";
 const char RUN_AS_USER[] = "root";
-const char LOCK_FILE[] = "/var/lock/subsys/glink";
-const char PID_FILE[] = "/var/run/glink.pid";
+const char LOCK_FILE[] = "/var/lock/subsys/gMaxLinked";
+const char PID_FILE[] = "/var/run/gMaxLinked.pid";
 
 static void sigHandler(int sigNo) {
 	switch (sigNo) {

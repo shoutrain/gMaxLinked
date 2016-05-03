@@ -1,21 +1,21 @@
 #!/bin/sh
 #
-# glinkd
+# gMaxLinkedd
 #
 # chkconfig: - 80 20
-# processname: glink
-# config: /etc/glink.conf
-# pidfile: /var/run/glink.pid
-# description: Starts and stops the glink daemon.
+# processname: gMaxLinked
+# config: /etc/gMaxLinked.conf
+# pidfile: /var/run/gMaxLinked.pid
+# description: Starts and stops the gMaxLinked daemon.
 
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-name=glink
-run=${RUN-/usr/local/sbin/glink}
-config=${CONFIG-/etc/glink.conf}
-pidfile=${PDIFILE-/var/run/glink.pid}
-lockfile=${LOCKFILE-/var/lock/subsys/glink}
+name=gMaxLinked
+run=${RUN-/usr/local/sbin/gMaxLinked}
+config=${CONFIG-/etc/gMaxLinked.conf}
+pidfile=${PDIFILE-/var/run/gMaxLinked.pid}
+lockfile=${LOCKFILE-/var/lock/subsys/gMaxLinked}
 
 start() {
     [ -f $config ] || exit 6

@@ -1,3 +1,3 @@
 bin_PROGRAMS=a.out
-a_out_SOURCES=gLink.cpp
+a_out_SOURCES=gMaxLinked.cpp
 

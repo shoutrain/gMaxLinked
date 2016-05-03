@@ -92,7 +92,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_a_out_OBJECTS = gLink.$(OBJEXT)
+am_a_out_OBJECTS = gMaxLinked.$(OBJEXT)
 a_out_OBJECTS = $(am_a_out_OBJECTS)
 a_out_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -247,7 +247,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-a_out_SOURCES = gLink.cpp
+a_out_SOURCES = gMaxLinked.cpp
 all: all-am
 
 .SUFFIXES:
@@ -335,7 +335,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gLink.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gMaxLinked.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

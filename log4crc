@@ -21,8 +21,8 @@
     <layout name="basic" type="dated_local"/>
     <layout name="dated_local" type="dated_local"/>
 
-    <category name="GLLog" priority="debug" appender="GLRollingAppender"/>
-    <appender name="GLRollingAppender" type="rollingfile" logdir="/var/log" prefix="glink.log" layout="dated_local" rollingpolicy="GLRollingPolicy" />
-    <rollingpolicy name="GLRollingPolicy" type="sizewin" maxsize="2097152" maxnum="99" />
+    <category name="GMLLog" priority="debug" appender="GMLRollingAppender"/>
+    <appender name="GMLRollingAppender" type="rollingfile" logdir="/var/log" prefix="gMaxLinked.log" layout="dated_local" rollingpolicy="GMLRollingPolicy" />
+    <rollingpolicy name="GMLRollingPolicy" type="sizewin" maxsize="2097152" maxnum="99" />
 
 </log4c>

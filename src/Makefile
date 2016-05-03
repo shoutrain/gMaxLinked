@@ -60,10 +60,10 @@ am__make_running_with_option = \
   test $$has_opt = yes
 am__make_dryrun = (target_option=n; $(am__make_running_with_option))
 am__make_keepgoing = (target_option=k; $(am__make_running_with_option))
-pkgdatadir = $(datadir)/glink
-pkgincludedir = $(includedir)/glink
-pkglibdir = $(libdir)/glink
-pkglibexecdir = $(libexecdir)/glink
+pkgdatadir = $(datadir)/gMaxLinked
+pkgincludedir = $(includedir)/gMaxLinked
+pkglibdir = $(libdir)/gMaxLinked
+pkglibexecdir = $(libexecdir)/gMaxLinked
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 install_sh_DATA = $(install_sh) -c -m 644
 install_sh_PROGRAM = $(install_sh) -c
@@ -92,7 +92,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_a_out_OBJECTS = gLink.$(OBJEXT)
+am_a_out_OBJECTS = gMaxLinked.$(OBJEXT)
 a_out_OBJECTS = $(am_a_out_OBJECTS)
 a_out_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_$(V))
@@ -151,19 +151,19 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /home/rafael/workspace/cpp/gLink/missing aclocal-1.13
+ACLOCAL = ${SHELL} /home/rafael/workspace/cpp/gMaxLinked/missing aclocal-1.13
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
-AUTOCONF = ${SHELL} /home/rafael/workspace/cpp/gLink/missing autoconf
-AUTOHEADER = ${SHELL} /home/rafael/workspace/cpp/gLink/missing autoheader
-AUTOMAKE = ${SHELL} /home/rafael/workspace/cpp/gLink/missing automake-1.13
+AUTOCONF = ${SHELL} /home/rafael/workspace/cpp/gMaxLinked/missing autoconf
+AUTOHEADER = ${SHELL} /home/rafael/workspace/cpp/gMaxLinked/missing autoheader
+AUTOMAKE = ${SHELL} /home/rafael/workspace/cpp/gMaxLinked/missing automake-1.13
 AWK = gawk
 CPPFLAGS = 
 CXX = g++
 CXXDEPMODE = depmode=gcc3
 CXXFLAGS = -g -O2
 CYGPATH_W = echo
-DEFS = -DPACKAGE_NAME=\"gLink\" -DPACKAGE_TARNAME=\"glink\" -DPACKAGE_VERSION=\"1.0\" -DPACKAGE_STRING=\"gLink\ 1.0\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE_URL=\"\" -DPACKAGE=\"glink\" -DVERSION=\"1.0\"
+DEFS = -DPACKAGE_NAME=\"gMaxLinked\" -DPACKAGE_TARNAME=\"gMaxLinked\" -DPACKAGE_VERSION=\"1.0\" -DPACKAGE_STRING=\"gMaxLinked\ 1.0\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE_URL=\"\" -DPACKAGE=\"gMaxLinked\" -DVERSION=\"1.0\"
 DEPDIR = .deps
 ECHO_C = 
 ECHO_N = -n
@@ -178,14 +178,14 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/rafael/workspace/cpp/gLink/missing makeinfo
+MAKEINFO = ${SHELL} /home/rafael/workspace/cpp/gMaxLinked/missing makeinfo
 MKDIR_P = /usr/bin/mkdir -p
 OBJEXT = o
-PACKAGE = glink
+PACKAGE = gMaxLinked
 PACKAGE_BUGREPORT = 
-PACKAGE_NAME = gLink
-PACKAGE_STRING = gLink 1.0
-PACKAGE_TARNAME = glink
+PACKAGE_NAME = gMaxLinked
+PACKAGE_STRING = gMaxLinked 1.0
+PACKAGE_TARNAME = gMaxLinked
 PACKAGE_URL = 
 PACKAGE_VERSION = 1.0
 PATH_SEPARATOR = :
@@ -193,10 +193,10 @@ SET_MAKE =
 SHELL = /bin/sh
 STRIP = 
 VERSION = 1.0
-abs_builddir = /home/rafael/workspace/cpp/gLink/src
-abs_srcdir = /home/rafael/workspace/cpp/gLink/src
-abs_top_builddir = /home/rafael/workspace/cpp/gLink
-abs_top_srcdir = /home/rafael/workspace/cpp/gLink
+abs_builddir = /home/rafael/workspace/cpp/gMaxLinked/src
+abs_srcdir = /home/rafael/workspace/cpp/gMaxLinked/src
+abs_top_builddir = /home/rafael/workspace/cpp/gMaxLinked
+abs_top_srcdir = /home/rafael/workspace/cpp/gMaxLinked
 ac_ct_CXX = g++
 am__include = include
 am__leading_dot = .
@@ -223,7 +223,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/rafael/workspace/cpp/gLink/install-sh
+install_sh = ${SHELL} /home/rafael/workspace/cpp/gMaxLinked/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -247,7 +247,7 @@ target_vendor = unknown
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
-a_out_SOURCES = gLink.cpp
+a_out_SOURCES = gMaxLinked.cpp
 all: all-am
 
 .SUFFIXES:
@@ -335,7 +335,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-include ./$(DEPDIR)/gLink.Po
+include ./$(DEPDIR)/gMaxLinked.Po
 
 .cpp.o:
 	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
