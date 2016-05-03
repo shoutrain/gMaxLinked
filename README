@@ -1,3 +1,8 @@
 gLink，a framework or a backend application for large concurrency, real-time, long-live tcp applications. 
 
 You can use gLink to establish application used by android push, WeChat/Line backend server, etc.
+
+Following libs is necessary:
+> pthread
+> hiredis
+> log4c

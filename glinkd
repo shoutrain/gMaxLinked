@@ -1,0 +1,60 @@
+#!/bin/sh
+#
+# glinkd
+#
+# chkconfig: - 80 20
+# processname: glink
+# config: /etc/glink.conf
+# pidfile: /var/run/glink.pid
+# description: Starts and stops the glink daemon.
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+name=glink
+run=${RUN-/usr/local/sbin/glink}
+config=${CONFIG-/etc/glink.conf}
+pidfile=${PDIFILE-/var/run/glink.pid}
+lockfile=${LOCKFILE-/var/lock/subsys/glink}
+
+start() {
+    [ -f $config ] || exit 6
+    [ -x $exec ] || exit 5
+    echo -n $"Starting $name..."
+    daemon --pidfile=${pidfile} ${run}
+    ret=$?
+    echo
+    [ $ret -eq 0 ] && touch ${lockfile}
+    return $ret
+}
+
+stop() {
+    echo -n $"Stopping $name..."
+    killproc -p ${pidfile} ${name}
+    ret=$?
+    echo
+    [ $ret -eq 0 ] && rm -f ${lockfile} ${pidfile}
+    return $ret
+}
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+    start)
+	start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+	restart
+	;;
+    *)
+	echo $"Usage: $name {start|stop|restart}"
+	exit 1
+esac
+
+exit $?

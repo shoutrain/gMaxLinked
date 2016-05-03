@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE log4c SYSTEM "">
+
+<log4c>
+
+    <config>
+        <bufsize>0</bufsize>
+        <debug level="0"/>
+        <nocleanup>0</nocleanup>
+    </config>
+
+    <!-- root category ========================================= -->
+    <category name="root" priority="notice"/>
+    
+    <!-- default appenders ===================================== -->
+    <appender name="stdout" type="stream" layout="basic"/>
+    <appender name="stderr" type="stream" layout="dated_local"/>
+    <appender name="syslog" type="syslog" layout="basic"/>
+
+    <!-- default layouts ======================================= -->
+    <layout name="basic" type="dated_local"/>
+    <layout name="dated_local" type="dated_local"/>
+
+    <category name="GLLog" priority="debug" appender="GLRollingAppender"/>
+    <appender name="GLRollingAppender" type="rollingfile" logdir="/var/log" prefix="glink.log" layout="dated_local" rollingpolicy="GLRollingPolicy" />
+    <rollingpolicy name="GLRollingPolicy" type="sizewin" maxsize="2097152" maxnum="99" />
+
+</log4c>
