@@ -1,8 +1,12 @@
 gMaxLinked，a framework or a backend application for large concurrency, real-time, long-live tcp applications. 
 
-You can use gMaxLinked to establish application used by android push, WeChat/Line backend server, etc.
+You can use gMaxLinked to establish application used by android push, WeChat/Line backend server, etc.  You can find the source code in src folder.
 
-Following libs is necessary:
+There are C and Java code for corresponding clients reference, you can find them in client folder.
+
+gMaxLinked only work on linux 64-bit.
+
+Following libs is necessary for gMaxLinked:
 > pthread
 > hiredis
 > log4c
