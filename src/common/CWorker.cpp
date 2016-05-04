@@ -13,26 +13,26 @@
 #include "IWorkable.h"
 
 CMutex CWorker::_mutexWorker;
-unsigned int CWorker::_workerNum = 0;
-bool CWorker::_workingCondition = true;
+ub4_ CWorker::_workerNum = 0;
+bool_ CWorker::_workingCondition = true_v;
 
-CWorker::CWorker(unsigned int threadStackSize) :
+CWorker::CWorker(ub4_ threadStackSize) :
 		_condInformed(&_mutexInformed) {
 	_threadStackSize = threadStackSize * 1024;
 	_handle = 0;
-	_informed = false;
-	_workable = NULL;
+	_informed = false_v;
+	_workable = null_v;
 }
 
 CWorker::~CWorker() {
 }
 
-void CWorker::work(IWorkable *workable, bool informed, bool sync) {
+none_ CWorker::work(IWorkable *workable, bool_ informed, bool_ sync) {
 	if (_handle) {
 		return;
 	}
 
-	assert(NULL != workable);
+	assert(null_v != workable);
 	_workable = workable;
 
 	if (!informed) {
@@ -42,7 +42,7 @@ void CWorker::work(IWorkable *workable, bool informed, bool sync) {
 
 		_informed = informed;
 
-		if (false == createThread()) {
+		if (false_v == createThread()) {
 			return;
 		}
 
@@ -51,12 +51,12 @@ void CWorker::work(IWorkable *workable, bool informed, bool sync) {
 		}
 
 		if (sync) {
-			pthread_join(_handle, NULL);
+			pthread_join(_handle, null_v);
 		}
 	}
 }
 
-void *CWorker::run(void *object) {
+obj_ CWorker::run(obj_ object) {
 	CWorker *worker = (CWorker *) object;
 
 	_mutexWorker.lock();
@@ -68,7 +68,7 @@ void *CWorker::run(void *object) {
 	worker->_mutexInformed.lock();
 
 	if (worker->_informed) {
-		worker->_informed = false;
+		worker->_informed = false_v;
 		worker->_condInformed.unlock();
 	}
 
@@ -88,33 +88,34 @@ void *CWorker::run(void *object) {
 
 	worker->_handle = 0;
 
-	return NULL;
+	return null_v;
 }
 
-bool CWorker::createThread() {
+bool_ CWorker::createThread() {
 	pthread_attr_t attr;
 
 	if (0 != pthread_attr_init(&attr)) {
 		log_fatal("CWorker::createThread: failed to call pthread_attr_init");
 
-		return false;
+		return false_v;
 	}
 
 	if (0 != pthread_attr_setstacksize(&attr, _threadStackSize)) {
 		log_fatal(
-				"CWorker::createThread: failed to call pthread_attr_setstacksize");
+				"CWorker::createThread: failed to call "
+				"pthread_attr_setstacksize");
 
-		return false;
+		return false_v;
 	}
 
-	if (0 != pthread_create(&_handle, &attr, CWorker::run, (void *) this)) {
+	if (0 != pthread_create(&_handle, &attr, CWorker::run, (obj_ ) this)) {
 		log_fatal("CWorker::createThread: failed to call pthread_create");
 
-		return false;
+		return false_v;
 	}
 
 	pthread_attr_destroy(&attr);
 
-	return true;
+	return true_v;
 
 }

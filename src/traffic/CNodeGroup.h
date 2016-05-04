@@ -28,20 +28,20 @@ public:
 	virtual ~CNodeGroup();
 
 	// called by CTrafficManager thread
-	void attach(CNode *node, const char *ip, unsigned short port, int fd);
+	none_ attach(CNode *node, const s1_ ip, ub2_ port, b4_ fd);
 
 	// called by CTrafficManager thread
-	void detach(CNode *node);
+	none_ detach(CNode *node);
 
 	// called by CTrafficManager and CTransactionManager threads
-	bool putMessage(const Message::TMsg *msg);
+	bool_ putMessage(const Message::TMsg *msg);
 
 	CRedisOperator &ro() {
 		return _ro;
 	}
 
 protected:
-	virtual bool working();
+	virtual bool_ working();
 
 private:
 	CWorker _worker;
@@ -54,7 +54,7 @@ private:
 
 	CRedisOperator _ro;
 
-	unsigned int _nodeNum;
+	ub4_ _nodeNum;
 };
 
 #endif // _C_NODE_GROUP_H_

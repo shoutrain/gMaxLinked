@@ -15,8 +15,8 @@ class IWorkable {
 public:
 
 	virtual ~IWorkable() {
-	} // to avoid waring
-	virtual bool working() = 0;
+	} // to anone_ waring
+	virtual bool_ working() = 0;
 };
 
 #endif // _I_WORKABLE_H_

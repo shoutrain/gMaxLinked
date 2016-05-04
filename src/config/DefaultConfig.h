@@ -15,38 +15,38 @@
 
 namespace DefaultConfig {
 
-namespace App {
+	namespace App {
 
-const char INI_FILE[] = "CollectHandler.conf";
+		const c1_ INI_FILE[] = "gMaxLinked.conf";
 
-const unsigned int RUN_AS_DAEMON = 0;
+		const ub4_ RUN_AS_DAEMON = 0;
 
-const char NAME[] = "CollectHandler";
-const unsigned int BASE_BUILD = 13;
+		const c1_ NAME[] = "gMaxLinked";
+		const ub4_ BASE_BUILD = 13;
 
-const char LISTEN_IP[] = "0.0.0.0";
-const short LISTEN_PORT = 10505;
+		const c1_ LISTEN_IP[] = "0.0.0.0";
+		const b2_ LISTEN_PORT = 10505;
 
-const unsigned int EPOLL_WAIT_EVENT_NUM = 16;
+		const ub4_ EPOLL_WAIT_EVENT_NUM = 16;
 
-const unsigned int NODE_GROUP_NUM = 4;
-const unsigned int NODE_GROUP_SIZE = 16;
+		const ub4_ NODE_GROUP_NUM = 4;
+		const ub4_ NODE_GROUP_SIZE = 16;
 
-// const unsigned int MESSAGE_MAX_NUM_IN_QUEUE = NODE_GROUP_SIZE;
+// const ub4_ MESSAGE_MAX_NUM_IN_QUEUE = NODE_GROUP_SIZE;
 
-const unsigned int THREAD_STACK_SIZE = 4096; // k
+		const ub4_ THREAD_STACK_SIZE = 4096;// k
 
-const unsigned int HANDSHAKE_INTERVAL = 10; // s
+		const ub4_ HANDSHAKE_INTERVAL = 10;// s
 
-}
+	}
 
-namespace Redis {
+	namespace Redis {
 
-const char HOST[] = "localhost";
-const short PORT = 6379;
-const int TIMEOUT = 1; // s
+		const c1_ HOST[] = "localhost";
+		const b2_ PORT = 6379;
+		const b4_ TIMEOUT = 1; // s
 
-}
+	}
 
 }
 

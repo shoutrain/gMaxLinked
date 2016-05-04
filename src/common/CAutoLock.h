@@ -15,7 +15,7 @@
 
 class CAutoLock: public CBase {
 public:
-	CAutoLock(CLock *lock = NULL);
+	CAutoLock(CLock *lock = null_v);
 	virtual ~CAutoLock();
 
 	const CLock *get() const {
@@ -24,7 +24,7 @@ public:
 
 private:
 	// Cannot new this class
-	void *operator new(size_t size);
+	obj_ operator new(size_t size);
 	CLock *_lock;
 };
 

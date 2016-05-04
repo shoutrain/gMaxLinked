@@ -13,29 +13,28 @@
 
 #include "CBase.h"
 
-const unsigned int MAX_CONFIG_FILE_SIZE = 0x8000;
+const ub4_ MAX_CONFIG_FILE_SIZE = 0x8000;
 
 class CIniReader: CBase {
 public:
-	CIniReader(const char *fileName);
+	CIniReader(const s1_ fileName);
 	virtual ~CIniReader();
 
-	int readString(const char *section, const char *key, char *value,
-			unsigned int size);
-	int readByte(const char *section, const char *key, unsigned char *value);
-	int readShort(const char *section, const char *key, unsigned short *value);
-	int readInt(const char *section, const char *key, unsigned int *value);
+	b4_ readString(const s1_ section, const s1_ key, s1_ value, ub4_ size);
+	b4_ readByte(const s1_ section, const s1_ key, ub1_ *value);
+	b4_ readShort(const s1_ section, const s1_ key, ub2_ *value);
+	b4_ readInt(const s1_ section, const s1_ key, ub4_ *value);
 
 private:
-	int isNewline(char c);
-	int isEndOfString(char c);
-	int isLeftBarce(char c);
-	int isRightBrace(char c);
-	int parseFile(const char *section, const char *key, int *secS, int *secE,
-			int *keyS, int *keyE, int *valueS, int *valueE);
+	b4_ isNewline(c1_ c);
+	b4_ isEndOfString(c1_ c);
+	b4_ isLeftBarce(c1_ c);
+	b4_ isRightBrace(c1_ c);
+	b4_ parseFile(const s1_ section, const s1_ key, b4_ *secS, b4_ *secE,
+			b4_ *keyS, b4_ *keyE, b4_ *valueS, b4_ *valueE);
 
-	char _buffer[MAX_CONFIG_FILE_SIZE];
-	int _bufferSize;
+	c1_ _buffer[MAX_CONFIG_FILE_SIZE];
+	b4_ _bufferSize;
 };
 
 #endif // _C_INI_READER_H_

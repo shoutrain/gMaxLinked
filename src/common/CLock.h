@@ -8,7 +8,6 @@
  ============================================================================
  */
 
-
 #ifndef _C_LOCK_H_
 #define _C_LOCK_H_
 
@@ -16,8 +15,8 @@
 
 class CLock: public CBase {
 public:
-	virtual bool lock(bool check = false) = 0;
-	virtual void unlock() = 0;
+	virtual bool_ lock(bool_ check = false_v) = 0;
+	virtual none_ unlock() = 0;
 
 protected:
 	CLock() {

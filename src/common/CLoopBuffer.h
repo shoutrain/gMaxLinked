@@ -17,52 +17,51 @@ class CMutex;
 
 class CLoopBuffer: public CBase {
 public:
-	CLoopBuffer(unsigned int size, CMutex *mutex = NULL,
-			bool isPadding = false);
+	CLoopBuffer(ub4_ size, CMutex *mutex = null_v, bool_ isPadding = false_v);
 	virtual ~CLoopBuffer();
 
 	// buffer: the buffer to be write to the LoopBuffer
 	// size: the buffer size
-	// Return true if success, otherwise false
-	bool write(const unsigned char *buffer, unsigned int size);
+	// Return true_v if success, otherwise false_v
+	bool_ write(const ub1_ *buffer, ub4_ size);
 
 	// buffer: the buffer to be read in
 	// size: the buffer size
 	// Return actual read size
-	unsigned int read(unsigned char *buffer, unsigned int size);
+	ub4_ read(ub1_ *buffer, ub4_ size);
 
-	void reset();
+	none_ reset();
 
-	unsigned int getTotalSize() const {
+	ub4_ getTotalSize() const {
 		return _totalSize;
 	}
 
-	unsigned int getActualSize() const {
+	ub4_ getActualSize() const {
 		return _actualSize;
 	}
 
-	unsigned int getFreeSize() const {
+	ub4_ getFreeSize() const {
 		return _freeSize;
 	}
 
-	unsigned int getUsedSize() const {
+	ub4_ getUsedSize() const {
 		return _usedSize;
 	}
 
 protected:
-	unsigned char *_buffer;
+	ub1_ *_buffer;
 
 private:
-	const unsigned int _totalSize;
-	unsigned int _actualSize; // _totalSize - _padding
-	unsigned int _usedSize; // _actualSize - _freeSize
-	unsigned int _freeSize; // _actualSize - _userSize
+	const ub4_ _totalSize;
+	ub4_ _actualSize; // _totalSize - _padding
+	ub4_ _usedSize; // _actualSize - _freeSize
+	ub4_ _freeSize; // _actualSize - _userSize
 
-	bool _isPadding;
-	unsigned int _padding; // = _totalSize - _actualSize
+	bool_ _isPadding;
+	ub4_ _padding; // = _totalSize - _actualSize
 
-	unsigned char *_writePoint;
-	unsigned char *_readPoint;
+	ub1_ *_writePob4_;
+	ub1_ *_readPob4_;
 
 	CMutex *_mutex;
 };

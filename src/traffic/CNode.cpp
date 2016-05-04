@@ -22,15 +22,14 @@ CNode::CNode() :
 	memset(_ip, 0, Size::IP_V4);
 	_port = 0;
 	_fd = 0;
-	_group = NULL;
+	_group = null_v;
 	_recvOffset = 0;
 }
 
 CNode::~CNode() {
 }
 
-void CNode::onAttach(CNodeGroup *group, const char *ip, unsigned short port,
-		int fd) {
+none_ CNode::onAttach(CNodeGroup *group, const s1_ ip, ub2_ port, b4_ fd) {
 	_group = group;
 	_recvOffset = 0;
 	strncpy(_ip, ip, Length::IP_V4);
@@ -39,16 +38,16 @@ void CNode::onAttach(CNodeGroup *group, const char *ip, unsigned short port,
 	_transaction.onAttach();
 }
 
-void CNode::onDetach() {
+none_ CNode::onDetach() {
 	_transaction.onDetach();
 	_fd = 0;
 	_port = 0;
 	memset(_ip, 0, Size::IP_V4);
 	_recvOffset = 0;
-	_group = NULL;
+	_group = null_v;
 }
 
-bool CNode::recv() {
+bool_ CNode::recv() {
 	ssize_t n;
 
 	for (;;) {
@@ -64,19 +63,19 @@ bool CNode::recv() {
 			if (Message::MSG_FIXED_LENGTH == _recvOffset) {
 				Message::TMsg *msg = (Message::TMsg *) _recvBuffer;
 
-				msg->extra.transaction = (long unsigned int) &_transaction;
+				msg->extra.transaction = (ub8_) &_transaction;
 				getGroup()->putMessage(msg);
 				_recvOffset = 0;
 			}
 		} else if (0 == n) {
 			// the socket has been closed
-			return false;
+			return false_v;
 		} else {
 			if (EAGAIN == errno) {
 				break;
 			}
 
-			char error[8] = { 0 };
+			c1_ error[8] = { 0 };
 
 			switch (errno) {
 			case EBADF:
@@ -99,25 +98,25 @@ bool CNode::recv() {
 				break;
 			default:
 				strncpy(error, "Unknown", 7);
-				assert(false);
+				assert(false_v);
 				break;
 			}
 
 			log_error("[%p %s:%u]CNode::recv: error-%s", &_transaction, _ip,
 					_port, error);
 
-			return false;
+			return false_v;
 		}
 
 	}
 
-	return true;
+	return true_v;
 }
 
-bool CNode::send(const Message::TMsg *msg) {
+bool_ CNode::send(const Message::TMsg *msg) {
 	ssize_t n;
-	unsigned char *buffer = (unsigned char *) msg;
-	unsigned int offset = 0;
+	ub1_ *buffer = (ub1_ *) msg;
+	ub4_ offset = 0;
 
 	do {
 		n = write(_fd, buffer + offset, Message::MSG_FIXED_LENGTH - offset);
@@ -128,7 +127,7 @@ bool CNode::send(const Message::TMsg *msg) {
 			offset += n;
 		} else if (0 == n) {
 			// the socket has been closed
-			return false;
+			return false_v;
 		} else {
 			if (EAGAIN == errno) {
 				sleep(0, 10);
@@ -136,7 +135,7 @@ bool CNode::send(const Message::TMsg *msg) {
 				continue;
 			}
 
-			char error[8] = { 0 };
+			c1_ error[8] = { 0 };
 
 			switch (errno) {
 			case EBADF:
@@ -165,16 +164,16 @@ bool CNode::send(const Message::TMsg *msg) {
 				break;
 			default:
 				strncpy(error, "Unknown", 7);
-				assert(false);
+				assert(false_v);
 				break;
 			}
 
 			log_error("[%p %s:%d]CNode::send: error-%s"
 					" when sending data.", &_transaction, _ip, _port, error);
 
-			return false;
+			return false_v;
 		}
 	} while (Message::MSG_FIXED_LENGTH > offset);
 
-	return true;
+	return true_v;
 }

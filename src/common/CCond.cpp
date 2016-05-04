@@ -8,7 +8,6 @@
  ============================================================================
  */
 
-
 #include "CCond.h"
 #include "CMutex.h"
 
@@ -16,7 +15,7 @@ CCond::CCond(CMutex *mutex) {
 	assert(mutex);
 	_mutex = mutex;
 
-	if (0 != pthread_cond_init(&_cond, NULL)) {
+	if (0 != pthread_cond_init(&_cond, null_v)) {
 		log_fatal("CCond::CCond: failed to call pthread_cond_init");
 	}
 }
@@ -27,17 +26,17 @@ CCond::~CCond() {
 	}
 }
 
-bool CCond::lock(bool check) {
+bool_ CCond::lock(bool_ check) {
 	if (0 != pthread_cond_wait(&_cond, _mutex->getMutex())) {
 		log_fatal("CCond::Lock: failed to call pthread_cond_wait");
 
-		return false;
+		return false_v;
 	}
 
-	return true;
+	return true_v;
 }
 
-void CCond::unlock() {
+none_ CCond::unlock() {
 	if (0 != pthread_cond_signal(&_cond)) {
 		log_fatal("CCond::Unlock: failed to call pthread_cond_signal");
 	}

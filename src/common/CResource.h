@@ -22,26 +22,26 @@ template<class T, class Y>
 class CResource: public CBase {
 public:
 
-	CResource(const unsigned int maxNum, CMutex *mutex = NULL) :
+	CResource(const ub4_ maxNum, CMutex *mutex = null_v) :
 			_maxNum(maxNum) {
 		assert(_maxNum > 1);
-		_unitGroup = (T **) new char[_maxNum * sizeof(T *)];
+		_unitGroup = (T **) new b1_[_maxNum * sizeof(T *)];
 		_mutex = mutex;
 
-		for (unsigned int ui = 0; ui < _maxNum; ui++) {
+		for (ub4_ ui = 0; ui < _maxNum; ui++) {
 			_unitGroup[ui] = new T();
 			_freeDeque.push_back(_unitGroup[ui]);
 		}
 	}
 
-	CResource(const unsigned int maxNum, Y *container, CMutex *mutex = NULL) :
+	CResource(const ub4_ maxNum, Y *container, CMutex *mutex = null_v) :
 			_maxNum(maxNum) {
 		assert(_maxNum > 1);
-		assert(NULL != container);
-		_unitGroup = (T **) new char[_maxNum * sizeof(T *)];
+		assert(null_v != container);
+		_unitGroup = (T **) new b1_[_maxNum * sizeof(T *)];
 		_mutex = mutex;
 
-		for (unsigned int ui = 0; ui < _maxNum; ui++) {
+		for (ub4_ ui = 0; ui < _maxNum; ui++) {
 			_unitGroup[ui] = new T(container);
 			_freeDeque.push_back(_unitGroup[ui]);
 		}
@@ -50,7 +50,7 @@ public:
 	virtual ~CResource() {
 		_freeDeque.clear();
 
-		for (unsigned int ui = 0; ui < _maxNum; ui++) {
+		for (ub4_ ui = 0; ui < _maxNum; ui++) {
 			delete _unitGroup[ui];
 		}
 
@@ -69,14 +69,14 @@ public:
 			return pUnit;
 		}
 
-		return NULL;
+		return null_v;
 	}
 
-	bool reclaim(T *&unit) {
+	bool_ reclaim(T *&unit) {
 		assert(unit);
 		CAutoLock al(_mutex);
 
-		unsigned int ui = 0;
+		ub4_ ui = 0;
 
 		for (; ui < _maxNum; ui++) {
 			if (unit == _unitGroup[ui]) {
@@ -86,20 +86,20 @@ public:
 
 		if (ui != _maxNum) {
 			_freeDeque.push_back(unit);
-			unit = NULL;
+			unit = null_v;
 
-			return true;
+			return true_v;
 		}
 
-		return false;
+		return false_v;
 	}
 
-	unsigned int size() const {
-		return (unsigned int) _freeDeque.size();
+	ub4_ size() const {
+		return (ub4_) _freeDeque.size();
 	}
 
 private:
-	const unsigned int _maxNum;
+	const ub4_ _maxNum;
 	T **_unitGroup;
 	CMutex *_mutex;
 

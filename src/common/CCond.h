@@ -22,8 +22,8 @@ public:
 	CCond(CMutex *mutex);
 	virtual ~CCond();
 
-	bool lock(bool check = false);
-	void unlock();
+	bool_ lock(bool_ check = false_v);
+	none_ unlock();
 
 private:
 	pthread_cond_t _cond;

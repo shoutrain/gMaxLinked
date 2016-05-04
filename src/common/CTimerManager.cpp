@@ -13,24 +13,23 @@
 
 #include <sys/time.h>
 
-CTimerManager::CTimerManager(unsigned int maxTimerNum,
-		unsigned int threadStackSize) :
-		_worker(threadStackSize), _mutex(true), _timerRes(maxTimerNum, &_mutex) {
-	_timerList = NULL;
-	_lastTimer = NULL;
-	_curTimer = NULL;
+CTimerManager::CTimerManager(ub4_ maxTimerNum, ub4_ threadStackSize) :
+		_worker(threadStackSize), _mutex(true_v), _timerRes(maxTimerNum,
+				&_mutex) {
+	_timerList = null_v;
+	_lastTimer = null_v;
+	_curTimer = null_v;
 
-	_worker.work(this, true);
+	_worker.work(this, true_v);
 }
 
 CTimerManager::~CTimerManager() {
 }
 
-long unsigned int CTimerManager::setTimer(unsigned int period, void *parameter,
-		unsigned int times) {
+ub8_ CTimerManager::setTimer(ub4_ period, obj_ parameter, ub4_ times) {
 	TTimer *timer = _timerRes.allocate();
 
-	if (NULL == timer) {
+	if (null_v == timer) {
 		log_crit("CTimerManager::setTimer: no more timers can be allocated");
 
 		return 0;
@@ -38,15 +37,15 @@ long unsigned int CTimerManager::setTimer(unsigned int period, void *parameter,
 
 	assert(NOTHING == timer->status || DELETED == timer->status);
 	struct timeval curTime;
-	gettimeofday(&curTime, NULL);
+	gettimeofday(&curTime, null_v);
 
 	timer->period = period;
 	timer->parameter = parameter;
 	timer->times = times;
 	timer->baseS = curTime.tv_sec;
 	timer->baseUS = curTime.tv_usec;
-	timer->previous = NULL;
-	timer->next = NULL;
+	timer->previous = null_v;
+	timer->next = null_v;
 	timer->status = TO_BE_ADD;
 
 	_mutex.lock();
@@ -57,10 +56,10 @@ long unsigned int CTimerManager::setTimer(unsigned int period, void *parameter,
 			"CTimerManager::setTimer: from-%p, time id-%p, period-%uSec, times-%u",
 			parameter, timer, period, times);
 
-	return (long unsigned int) timer;
+	return (ub8_) timer;
 }
 
-void CTimerManager::killTimer(long unsigned int timerId) {
+none_ CTimerManager::killTimer(ub8_ timerId) {
 	assert(timerId > 0);
 	TTimer *timer = (TTimer *) timerId;
 	assert(NOTHING != timer->status);
@@ -83,7 +82,7 @@ void CTimerManager::killTimer(long unsigned int timerId) {
 	log_debug("CTimerManager::killTimer: time id-%p.", timer);
 }
 
-bool CTimerManager::working() {
+bool_ CTimerManager::working() {
 	_mutex.lock();
 
 	while (!_queueForAdd.empty()) {
@@ -113,24 +112,24 @@ bool CTimerManager::working() {
 	_mutex.unlock();
 
 	struct timeval curTime;
-	gettimeofday(&curTime, NULL);
+	gettimeofday(&curTime, null_v);
 
-	if (NULL == _curTimer) {
-		if (NULL == _timerList) {
+	if (null_v == _curTimer) {
+		if (null_v == _timerList) {
 			// Sleep for 0.1s
 			sleep(0, 100);
 
-			return true;
+			return true_v;
 		}
 
 		_curTimer = _timerList;
 	}
 
-	int i = _curTimer->period + _curTimer->baseS;
+	b4_ i = _curTimer->period + _curTimer->baseS;
 
 	if ((i < curTime.tv_sec)
 			|| (i == curTime.tv_sec && _curTimer->baseUS <= curTime.tv_usec)) {
-		if (onTimer((long unsigned int) _curTimer, _curTimer->parameter)) {
+		if (onTimer((ub8_) _curTimer, _curTimer->parameter)) {
 			_curTimer->baseS = curTime.tv_sec;
 			_curTimer->baseUS = curTime.tv_usec;
 
@@ -143,7 +142,7 @@ bool CTimerManager::working() {
 					_curTimer = _curTimer->next;
 					delTimer(pCurTimer);
 
-					return true;
+					return true_v;
 				}
 			}
 		} else {
@@ -152,20 +151,20 @@ bool CTimerManager::working() {
 			_curTimer = _curTimer->next;
 			delTimer(pCurTimer);
 
-			return true;
+			return true_v;
 		}
 	}
 
 	_curTimer = _curTimer->next;
 
-	return true;
+	return true_v;
 }
 
-void CTimerManager::addTimer(TTimer *timer) {
-	assert(NULL != timer);
+none_ CTimerManager::addTimer(TTimer *timer) {
+	assert(null_v != timer);
 
-	if (NULL == _timerList) {
-		assert(NULL == _lastTimer);
+	if (null_v == _timerList) {
+		assert(null_v == _lastTimer);
 		_lastTimer = _timerList = timer;
 	} else {
 		timer->previous = _lastTimer;
@@ -176,24 +175,24 @@ void CTimerManager::addTimer(TTimer *timer) {
 	timer->status = ADDED;
 }
 
-void CTimerManager::delTimer(TTimer *timer) {
-	assert(NULL != timer);
+none_ CTimerManager::delTimer(TTimer *timer) {
+	assert(null_v != timer);
 
-	if (NULL == timer->previous) {
+	if (null_v == timer->previous) {
 		assert(timer == _timerList);
 
-		if (NULL == timer->next) {
+		if (null_v == timer->next) {
 			assert(timer == _lastTimer);
-			_lastTimer = _timerList = NULL;
+			_lastTimer = _timerList = null_v;
 		} else {
 			_timerList = timer->next;
-			_timerList->previous = NULL;
+			_timerList->previous = null_v;
 		}
 	} else {
-		if (NULL == timer->next) {
+		if (null_v == timer->next) {
 			assert(timer == _lastTimer);
 			_lastTimer = timer->previous;
-			_lastTimer->next = NULL;
+			_lastTimer->next = null_v;
 		} else {
 			timer->previous->next = timer->next;
 			timer->next->previous = timer->previous;

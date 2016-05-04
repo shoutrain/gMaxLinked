@@ -27,7 +27,7 @@
 #include <string.h>
 #include <pthread.h>
 
-CTrafficManager *CTrafficManager::_tm = NULL;
+CTrafficManager *CTrafficManager::_tm = null_v;
 
 CTrafficManager *CTrafficManager::instance() {
 	if (!_tm) {
@@ -37,9 +37,9 @@ CTrafficManager *CTrafficManager::instance() {
 	return _tm;
 }
 
-void CTrafficManager::destory() {
+none_ CTrafficManager::destory() {
 	delete _tm;
-	_tm = NULL;
+	_tm = null_v;
 }
 
 CTrafficManager::CTrafficManager() :
@@ -52,11 +52,11 @@ CTrafficManager::CTrafficManager() :
 
 	_curGroupIndex = 0;
 
-	_running = true;
+	_running = true_v;
 }
 
 CTrafficManager::~CTrafficManager() {
-	_running = false;
+	_running = false_v;
 
 	if (_listenFd) {
 		close(_listenFd);
@@ -69,7 +69,7 @@ CTrafficManager::~CTrafficManager() {
 	delete[] _groups;
 }
 
-void CTrafficManager::work() {
+none_ CTrafficManager::work() {
 	// create socket to listen.
 	// SOCK_NONBLOCK is not supported by less than glibc 2.9
 	_listenFd = socket(AF_INET, SOCK_STREAM, 0);
@@ -82,11 +82,11 @@ void CTrafficManager::work() {
 
 	setNonBlocking(_listenFd);
 
-	int optVal = 1;
+	b4_ optVal = 1;
 
-	if (setsockopt(_listenFd, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(int))) {
-		log_fatal(
-				"CTrafficManager::work: failed to setsockopt with SO_REUSEADDR");
+	if (setsockopt(_listenFd, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(b4_))) {
+		log_fatal("CTrafficManager::work: failed to setsockopt with "
+				"SO_REUSEADDR");
 
 		exit(0);
 	}
@@ -114,7 +114,7 @@ void CTrafficManager::work() {
 		exit(0);
 	}
 
-	// register listening fd into epoll.
+	// register listening fd b4_o epoll.
 	struct epoll_event ev;
 
 	ev.events = EPOLLIN | EPOLLET;
@@ -123,34 +123,36 @@ void CTrafficManager::work() {
 	if (-1 == epoll_ctl(_epollFd, EPOLL_CTL_ADD, _listenFd, &ev)) {
 		switch (errno) {
 		case EBADF:
-			log_fatal("CTrafficManager::work: failed to call epoll_ctrl-EBADF");
+			log_fatal("CTrafficManager::work: failed to call "
+					"epoll_ctrl-EBADF");
 			break;
 		case EEXIST:
-			log_fatal(
-					"CTrafficManager::work: failed to call epoll_ctrl-EEXIST");
+			log_fatal("CTrafficManager::work: failed to call "
+					"epoll_ctrl-EEXIST");
 			break;
 		case EINVAL:
-			log_fatal(
-					"CTrafficManager::work: failed to call epoll_ctrl-EINVAL");
+			log_fatal("CTrafficManager::work: failed to call "
+					"epoll_ctrl-EINVAL");
 			break;
 		case ENOENT:
-			log_fatal(
-					"CTrafficManager::work: failed to call epoll_ctrl-ENOENT");
+			log_fatal("CTrafficManager::work: failed to call "
+					"epoll_ctrl-ENOENT");
 			break;
 		case ENOMEM:
-			log_fatal(
-					"CTrafficManager::work: failed to call epoll_ctrl-ENOMEM");
+			log_fatal("CTrafficManager::work: failed to call "
+					"epoll_ctrl-ENOMEM");
 			break;
 		case ENOSPC:
-			log_fatal(
-					"CTrafficManager::work: failed to call epoll_ctrl-ENOSPC");
+			log_fatal("CTrafficManager::work: failed to call "
+					"epoll_ctrl-ENOSPC");
 			break;
 		case EPERM:
-			log_fatal("CTrafficManager::work: failed to call epoll_ctrl-EPERM");
+			log_fatal("CTrafficManager::work: failed to call "
+					"epoll_ctrl-EPERM");
 			break;
 		default:
-			log_fatal(
-					"CTrafficManager::work: failed to call epoll_ctrl-Unknown.");
+			log_fatal("CTrafficManager::work: failed to call "
+					"epoll_ctrl-Unknown");
 		}
 
 		exit(0);
@@ -163,10 +165,10 @@ void CTrafficManager::work() {
 		return;
 	}
 
-	_worker.work(this, true, true);
+	_worker.work(this, true_v, true_v);
 }
 
-bool CTrafficManager::working() {
+bool_ CTrafficManager::working() {
 	// recycle nodes at first
 	_mutex.lock();
 
@@ -180,34 +182,34 @@ bool CTrafficManager::working() {
 	struct epoll_event events[Config::App::EPOLL_WAIT_EVENT_NUM];
 
 	// waiting until timeout (1 second)
-	int fds = epoll_wait(_epollFd, events, Config::App::EPOLL_WAIT_EVENT_NUM,
+	b4_ fds = epoll_wait(_epollFd, events, Config::App::EPOLL_WAIT_EVENT_NUM,
 			1000);
 
 	if (-1 == fds) {
 		switch (errno) {
 		case EBADF:
-			log_fatal(
-					"CTrafficManager::working: failed to call epoll_wait-EBADF");
-			return false;
+			log_fatal("CTrafficManager::working: failed to call "
+					"epoll_wait-EBADF");
+			return false_v;
 		case EFAULT:
-			log_fatal(
-					"CTrafficManager::working: failed to call epoll_wait-EFAULT");
-			return false;
+			log_fatal("CTrafficManager::working: failed to call "
+					"epoll_wait-EFAULT");
+			return false_v;
 		case EINTR:
-			return true;
+			return true_v;
 		case EINVAL:
-			log_fatal(
-					"CTrafficManager::working: failed to call epoll_wait-EINVAL.");
-			return false;
+			log_fatal("CTrafficManager::working: failed to call "
+					"epoll_wait-EINVAL.");
+			return false_v;
 		default:
-			log_fatal(
-					"CTrafficManager::working: failed to call epoll_wait-Unknown.");
-			assert(false);
-			return false;
+			log_fatal("CTrafficManager::working: failed to call "
+					"epoll_wait-Unknown.");
+			assert(false_v);
+			return false_v;
 		}
 	}
 
-	for (int i = 0; i < fds; i++) {
+	for (b4_ i = 0; i < fds; i++) {
 		// handle accept socket
 		if (events[i].data.fd == _listenFd) {
 			assert(events[i].events & EPOLLIN);
@@ -237,9 +239,9 @@ bool CTrafficManager::working() {
 
 		// receive data from client
 		if (events[i].events & EPOLLIN) {
-			if (false == node->recv()) {
-				log_debug(
-						"[%p %s:%u]CTrafficManager::working: failed to receive data",
+			if (false_v == node->recv()) {
+				log_debug("[%p %s:%u]CTrafficManager::working: "
+						"failed to receive data",
 						node->getTransaction(), node->getIp(), node->getPort());
 				node->getTransaction()->over(CANNOT_RECV_DATA);
 			}
@@ -249,11 +251,11 @@ bool CTrafficManager::working() {
 	return _running;
 }
 
-void CTrafficManager::addNodes() {
+none_ CTrafficManager::addNodes() {
 	for (;;) {
 		struct sockaddr_in addr;
 		socklen_t len = sizeof(struct sockaddr_in);
-		int clientFd = accept(_listenFd, (struct sockaddr *) &addr, &len);
+		b4_ clientFd = accept(_listenFd, (struct sockaddr *) &addr, &len);
 
 		if (-1 == clientFd) {
 			if (errno != EAGAIN) {
@@ -280,42 +282,42 @@ void CTrafficManager::addNodes() {
 
 		struct epoll_event ev;
 
-		ev.data.u64 = (long unsigned int) node;
+		ev.data.u64 = (ub8_) node;
 		ev.events = EPOLLIN | EPOLLRDHUP | EPOLLET;
 
 		if (-1 == epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientFd, &ev)) {
 			switch (errno) {
 			case EBADF:
-				log_fatal(
-						"CTrafficManager::addNodes: failed to call epoll_ctrl-EBADF");
+				log_fatal("CTrafficManager::addNodes: failed to call "
+						"epoll_ctrl-EBADF");
 				break;
 			case EEXIST:
-				log_fatal(
-						"CTrafficManager::addNodes: failed to call epoll_ctrl-EEXIST");
+				log_fatal("CTrafficManager::addNodes: failed to call "
+						"epoll_ctrl-EEXIST");
 				break;
 			case EINVAL:
-				log_fatal(
-						"CTrafficManager::addNodes: failed to call epoll_ctrl-EINVAL");
+				log_fatal("CTrafficManager::addNodes: failed to call "
+						"epoll_ctrl-EINVAL");
 				break;
 			case ENOENT:
-				log_fatal(
-						"CTrafficManager::addNodes: failed to call epoll_ctrl-ENOENT");
+				log_fatal("CTrafficManager::addNodes: failed to call "
+						"epoll_ctrl-ENOENT");
 				break;
 			case ENOMEM:
-				log_fatal(
-						"CTrafficManager::addNodes: failed to call epoll_ctrl-ENOMEM");
+				log_fatal("CTrafficManager::addNodes: failed to call "
+						"epoll_ctrl-ENOMEM");
 				break;
 			case ENOSPC:
-				log_fatal(
-						"CTrafficManager::addNodes: failed to call epoll_ctrl-ENOSPC");
+				log_fatal("CTrafficManager::addNodes: failed to call "
+						"epoll_ctrl-ENOSPC");
 				break;
 			case EPERM:
-				log_fatal(
-						"CTrafficManager::addNodes: failed to call epoll_ctrl-EPERM");
+				log_fatal("CTrafficManager::addNodes: failed to call "
+						"epoll_ctrl-EPERM");
 				break;
 			default:
-				log_fatal(
-						"CTrafficManager::addNodes: failed to call epoll_ctrl-Unknown.");
+				log_fatal("CTrafficManager::addNodes: failed to call "
+						"epoll_ctrl-Unknown.");
 			}
 
 			group->detach(node);
@@ -328,7 +330,7 @@ void CTrafficManager::addNodes() {
 	}
 }
 
-void CTrafficManager::delNode(CNode *node) {
+none_ CTrafficManager::delNode(CNode *node) {
 	if (FREE == node->getTransaction()->getStatus() || 0 == node->getFd()) {
 		return;
 	}
@@ -336,39 +338,39 @@ void CTrafficManager::delNode(CNode *node) {
 	log_debug("[%p %s:%u]CTrafficManager::delNode: release node",
 			node->getTransaction(), node->getIp(), node->getPort());
 
-	if (-1 == epoll_ctl(_epollFd, EPOLL_CTL_DEL, node->getFd(), NULL)) {
+	if (-1 == epoll_ctl(_epollFd, EPOLL_CTL_DEL, node->getFd(), null_v)) {
 		switch (errno) {
 		case EBADF:
-			log_fatal(
-					"CTrafficManager::delNode: failed to call epoll_ctrl-EBADF");
+			log_fatal("CTrafficManager::delNode: failed to call "
+					"epoll_ctrl-EBADF");
 			break;
 		case EEXIST:
-			log_fatal(
-					"CTrafficManager::delNode: failed to call epoll_ctrl-EEXIST");
+			log_fatal("CTrafficManager::delNode: failed to call "
+					"epoll_ctrl-EEXIST");
 			break;
 		case EINVAL:
-			log_fatal(
-					"CTrafficManager::delNode: failed to call epoll_ctrl-EINVAL");
+			log_fatal("CTrafficManager::delNode: failed to call "
+					"epoll_ctrl-EINVAL");
 			break;
 		case ENOENT:
-			log_fatal(
-					"CTrafficManager::delNode: failed to call epoll_ctrl-ENOENT");
+			log_fatal("CTrafficManager::delNode: failed to call "
+					"epoll_ctrl-ENOENT");
 			break;
 		case ENOMEM:
-			log_fatal(
-					"CTrafficManager::delNode: failed to call epoll_ctrl-ENOMEM");
+			log_fatal("CTrafficManager::delNode: failed to call "
+					"epoll_ctrl-ENOMEM");
 			break;
 		case ENOSPC:
-			log_fatal(
-					"CTrafficManager::delNode: failed to call epoll_ctrl-ENOSPC");
+			log_fatal("CTrafficManager::delNode: failed to call "
+					"epoll_ctrl-ENOSPC");
 			break;
 		case EPERM:
-			log_fatal(
-					"CTrafficManager::delNode: failed to call epoll_ctrl-EPERM");
+			log_fatal("CTrafficManager::delNode: failed to call "
+					"epoll_ctrl-EPERM");
 			break;
 		default:
-			log_fatal(
-					"CTrafficManager::delNode: failed to call epoll_ctrl-Unknown.");
+			log_fatal("CTrafficManager::delNode: failed to call "
+					"epoll_ctrl-Unknown.");
 		}
 	}
 
@@ -377,26 +379,26 @@ void CTrafficManager::delNode(CNode *node) {
 	_res.reclaim(node);
 }
 
-void CTrafficManager::recycleNode(CNode *node) {
-	assert(NULL != node);
+none_ CTrafficManager::recycleNode(CNode *node) {
+	assert(null_v != node);
 	_mutex.lock();
 	_nodeQueue.push(node);
 	_mutex.unlock();
 }
 
-void CTrafficManager::setNonBlocking(int socket) {
-	int iOpts = fcntl(socket, F_GETFL);
+none_ CTrafficManager::setNonBlocking(b4_ socket) {
+	b4_ iOpts = fcntl(socket, F_GETFL);
 
 	if (0 > iOpts) {
-		log_error(
-				"CTrafficManager::setNonBlocking: failed to call fcntl with F_GETFL");
+		log_error("CTrafficManager::setNonBlocking: failed to call fcntl with "
+				"F_GETFL");
 	}
 
 	iOpts |= O_NONBLOCK;
 
 	if (0 > fcntl(socket, F_SETFL, iOpts)) {
-		log_error(
-				"CTrafficManager::setNonBlocking: failed to call fctntl with F_SETFL");
+		log_error("CTrafficManager::setNonBlocking: failed to call fctntl with "
+				"F_SETFL");
 	}
 }
 

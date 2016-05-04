@@ -21,15 +21,13 @@ public:
 	CRedisOperator();
 	virtual ~CRedisOperator();
 
-	bool connect();
-	void disconnect();
-
-
+	bool_ connect();
+	none_ disconnect();
 
 private:
 	redisContext *_context;
 
-	bool errorHandler(void *reply, bool freeReply = true);
+	bool_ errorHandler(obj_ reply, bool_ freeReply = true_v);
 };
 
 #endif // _C_REDIS_OPERATOR_H_

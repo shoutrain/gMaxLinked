@@ -21,14 +21,14 @@ CNodeGroup::CNodeGroup() :
 				Config::App::MESSAGE_MAX_NUM_IN_QUEUE
 						* Message::MSG_FIXED_LENGTH) {
 	_nodeNum = 0;
-	_worker.work(this, true);
+	_worker.work(this, true_v);
 }
 
 CNodeGroup::~CNodeGroup() {
 }
 
-void CNodeGroup::attach(CNode *node, const char *ip, unsigned short port,
-		int fd) {
+none_ CNodeGroup::attach(CNode *node, const s1_ ip, ub2_ port,
+		b4_ fd) {
 	assert(node);
 
 	if (0 == _nodeNum) {
@@ -39,7 +39,7 @@ void CNodeGroup::attach(CNode *node, const char *ip, unsigned short port,
 	node->onAttach(this, ip, port, fd);
 }
 
-void CNodeGroup::detach(CNode *node) {
+none_ CNodeGroup::detach(CNode *node) {
 	assert(node);
 	node->onDetach();
 	_nodeNum--;
@@ -49,39 +49,39 @@ void CNodeGroup::detach(CNode *node) {
 	}
 }
 
-bool CNodeGroup::putMessage(const Message::TMsg *msg) {
+bool_ CNodeGroup::putMessage(const Message::TMsg *msg) {
 	assert(msg);
 	CAutoLock al(&_mutex);
 
 	log_debug("[%p %p]CNodeGroup::putMessage: write a message",
-			(void * )msg->extra.transaction, this);
+			(obj_  )msg->extra.transaction, this);
 
-	if (!_queue.write((const unsigned char *) msg, Message::MSG_FIXED_LENGTH)) {
+	if (!_queue.write((const ub1_ *) msg, Message::MSG_FIXED_LENGTH)) {
 		log_crit(
 				"[%p %p]CNodeGroup::putMessage: the size of queue is too small",
-				(void * )msg->extra.transaction, this);
+				(obj_  )msg->extra.transaction, this);
 
-		return false;
+		return false_v;
 	}
 
 	_cond.unlock();
 
-	return true;
+	return true_v;
 }
 
-bool CNodeGroup::working() {
+bool_ CNodeGroup::working() {
 	_mutex.lock();
 
 	if (Message::MSG_FIXED_LENGTH > _queue.getUsedSize()) {
 		_cond.lock();
 	}
 
-	unsigned int n = _queue.read((unsigned char *) &_curMsg,
+	ub4_ n = _queue.read((ub1_ *) &_curMsg,
 			Message::MSG_FIXED_LENGTH);
 	assert(Message::MSG_FIXED_LENGTH == n);
 
 	log_debug("[%p %p]CNodeGroup::working: read a message",
-			(void * )_curMsg.extra.transaction, this);
+			(obj_  )_curMsg.extra.transaction, this);
 	_mutex.unlock();
 
 	assert(_curMsg.extra.transaction);
@@ -95,5 +95,5 @@ bool CNodeGroup::working() {
 		}
 	}
 
-	return true;
+	return true_v;
 }

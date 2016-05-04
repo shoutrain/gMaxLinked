@@ -17,11 +17,11 @@
 
 class CBase {
 public:
-	static bool initialize();
-	static void uninitialize();
+	static bool_ initialize();
+	static none_ uninitialize();
 
 	static log4c_category_t *getCategory();
-	static int sleep(unsigned int seconds, unsigned int ms = 0);
+	static b4_ sleep(ub4_ seconds, ub4_ ms = 0);
 
 protected:
 	CBase();

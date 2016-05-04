@@ -22,30 +22,29 @@ public:
 
 	// called when CNodeGroup attach the node
 	// called by CTrafficManager thread
-	void onAttach(CNodeGroup *node, const char *ip, unsigned short port,
-			int fd);
+	none_ onAttach(CNodeGroup *node, const s1_ ip, ub2_ port, b4_ fd);
 
 	// called when CNodeGroup detach the node
 	// called by CTrafficManager thread
-	void onDetach();
+	none_ onDetach();
 
-	// receive data from client and put them into the input queue
+	// receive data from client and put them b4_o the input queue
 	// called by CTrafficManager thread
-	bool recv();
+	bool_ recv();
 
 	// send data to client
 	// called by CNodeGroup thread
-	bool send(const Message::TMsg *msg);
+	bool_ send(const Message::TMsg *msg);
 
-	const char *getIp() const {
+	const s1_ getIp() const {
 		return _ip;
 	}
 
-	unsigned short getPort() const {
+	ub2_ getPort() const {
 		return _port;
 	}
 
-	int getFd() const {
+	b4_ getFd() const {
 		return _fd;
 	}
 
@@ -58,11 +57,11 @@ public:
 	}
 
 private:
-	char _ip[Size::IP_V4];
-	unsigned short _port;
+	c1_ _ip[Size::IP_V4];
+	ub2_ _port;
 
 	// socket file descriptor
-	int _fd;
+	b4_ _fd;
 
 	// corresponding unite on upper layer
 	CTransaction _transaction;
@@ -71,8 +70,8 @@ private:
 	CNodeGroup *_group;
 
 	// message buffer
-	unsigned int _recvOffset;
-	unsigned char _recvBuffer[Message::MSG_FIXED_LENGTH];
+	ub4_ _recvOffset;
+	ub1_ _recvBuffer[Message::MSG_FIXED_LENGTH];
 };
 
 #endif // _C_NODE_H_

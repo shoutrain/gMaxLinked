@@ -13,10 +13,10 @@
 
 namespace Length {
 
-const unsigned int NAME = 32;
-const unsigned int IP_V4 = 15;
-const unsigned int URL = 256;
-const unsigned int INI_FILE = 256;
+const ub4_ NAME = 32;
+const ub4_ IP_V4 = 15;
+const ub4_ URL = 256;
+const ub4_ INI_FILE = 256;
 
 // TODO define your lengths here
 

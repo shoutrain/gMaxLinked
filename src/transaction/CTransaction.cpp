@@ -29,7 +29,7 @@ CTransaction::CTransaction(CNode *node) :
 CTransaction::~CTransaction() {
 }
 
-void CTransaction::onAttach() {
+none_ CTransaction::onAttach() {
 	assert(_id == 0);
 	assert(_status == FREE);
 	_status = CONNECTED;
@@ -38,14 +38,14 @@ void CTransaction::onAttach() {
 			Config::App::HANDSHAKE_INTERVAL, this, 1);
 }
 
-void CTransaction::onDetach() {
+none_ CTransaction::onDetach() {
 	assert(_id == 0);
 	assert(OVER == _status);
 	_status = FREE;
 	assert(_keepLiveTimerId == 0);
 }
 
-void CTransaction::over(ETransactionExitReason reason) {
+none_ CTransaction::over(ETransactionExitReason reason) {
 	_status = OVER;
 
 	Message::TMsg msg;
@@ -53,13 +53,13 @@ void CTransaction::over(ETransactionExitReason reason) {
 
 	msg.header.length = sizeof(Message::TMBOver);
 	msg.header.cmd = Message::MC_OVER;
-	msg.extra.transaction = (long unsigned int) this;
-	body->reason = (int) reason;
+	msg.extra.transaction = (ub8_) this;
+	body->reason = (b4_) reason;
 
 	_node->getGroup()->putMessage(&msg);
 }
 
-bool CTransaction::onMessage(const Message::TMsg *msg) {
+bool_ CTransaction::onMessage(const Message::TMsg *msg) {
 	switch (msg->header.cmd) {
 	case Message::MC_HANDSHAKE:
 		return onStart(msg->header.length, msg->extra.sequence,
@@ -76,18 +76,18 @@ bool CTransaction::onMessage(const Message::TMsg *msg) {
 				"status-%d", this, msg->header.cmd, _status);
 		over(UNKNOWN_MESSAGE);
 
-		return true;
+		return true_v;
 	}
 }
 
-bool CTransaction::onStart(unsigned short length, unsigned int sequence,
+bool_ CTransaction::onStart(ub2_ length, ub4_ sequence,
 		const Message::TMBHandshake *data) {
 	log_debug("[%p]CTransaction::onStart: current status-%d", this, _status);
 
 	if (CONNECTED != _status) {
 		over(WRONG_STATUS);
 
-		return true;
+		return true_v;
 	}
 
 	assert(_keepLiveTimerId);
@@ -110,7 +110,7 @@ bool CTransaction::onStart(unsigned short length, unsigned int sequence,
 		getNode()->send(&msg);
 		over(CLIENT_TOO_OLD);
 
-		return true;
+		return true_v;
 	}
 
 	if (!CTransactionManager::instance()->registerTransaction(this)) {
@@ -121,7 +121,7 @@ bool CTransaction::onStart(unsigned short length, unsigned int sequence,
 		getNode()->send(&msg);
 		over(SAME_TRANSACTION_ID);
 
-		return true;
+		return true_v;
 	}
 
 	_node->getGroup()->ro().handleHandshake(_id, _node->getIp(),
@@ -130,23 +130,23 @@ bool CTransaction::onStart(unsigned short length, unsigned int sequence,
 	ack->result = 0;
 
 	if (!getNode()->send(&msg)) {
-		return true;
+		return true_v;
 	}
 
 	_keepLiveTimerId = CTransactionManager::instance()->setTimer(
 			Config::App::HANDSHAKE_INTERVAL, this, 1);
 
-	return true;
+	return true_v;
 }
 
-bool CTransaction::onRealtime(unsigned int sequence,
+bool_ CTransaction::onRealtime(ub4_ sequence,
 		const Message::TMBRealtime *data) {
 	log_debug("[%p]CTransaction::onRealtime: current status-%d", this, _status);
 
 	if (READY != _status) {
 		over(WRONG_STATUS);
 
-		return true;
+		return true_v;
 	}
 
 	assert(_keepLiveTimerId);
@@ -164,16 +164,16 @@ bool CTransaction::onRealtime(unsigned int sequence,
 	ack->result = 0;
 
 	if (!getNode()->send(&msg)) {
-		return true;
+		return true_v;
 	}
 
 	_keepLiveTimerId = CTransactionManager::instance()->setTimer(
 			Config::App::HANDSHAKE_INTERVAL, this, 1);
 
-	return true;
+	return true_v;
 }
 
-bool CTransaction::onTimer(const Message::TMBTimer *data) {
+bool_ CTransaction::onTimer(const Message::TMBTimer *data) {
 	if (_keepLiveTimerId == data->timerId) {
 		log_debug("[%p]CTransaction::onTimer: current status-%d", this,
 				_status);
@@ -182,26 +182,29 @@ bool CTransaction::onTimer(const Message::TMBTimer *data) {
 		// invalid time id
 	}
 
-	return true;
+	return true_v;
 }
 
-bool CTransaction::onStop(const Message::TMBOver *data) {
+bool_ CTransaction::onStop(const Message::TMBOver *data) {
 	log_debug("[%p]CTransaction::onStop: current status-%d", this, _status);
 	_status = OVER;
 
 	switch (data->reason) {
 	case WRONG_STATUS:
-		log_debug("[%p]CTransaction::onStop: reason-%s", this, "wrong status");
+		log_debug("[%p]CTransaction::onStop: reason-%s", this,
+				"wrong status");
 		break;
 	case CLIENT_TOO_OLD:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
 				"client too old");
 		break;
 	case SAME_TRANSACTION_ID:
-		log_debug("[%p]CTransaction::onStop: reason-%s", this, "same owner id");
+		log_debug("[%p]CTransaction::onStop: reason-%s", this,
+				"same owner id");
 		break;
 	case TIME_OUT:
-		log_debug("[%p]CTransaction::onStop: reason-%s", this, "time out");
+		log_debug("[%p]CTransaction::onStop: reason-%s", this,
+				"time out");
 		break;
 	case UNKNOWN_MESSAGE:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
@@ -234,6 +237,6 @@ bool CTransaction::onStop(const Message::TMBOver *data) {
 		_id = 0;
 	}
 
-	return false;
+	return false_v;
 }
 

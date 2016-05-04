@@ -18,11 +18,11 @@
 
 class CMutex: public CLock {
 public:
-	CMutex(bool recursive = false);
+	CMutex(bool_ recursive = false_v);
 	virtual ~CMutex();
 
-	bool lock(bool check = false);
-	void unlock();
+	bool_ lock(bool_ check = false_v);
+	none_ unlock();
 
 	pthread_mutex_t *getMutex() {
 		return &_mutex;

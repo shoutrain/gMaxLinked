@@ -15,6 +15,7 @@
 #include "../common/CWorker.h"
 #include "../common/CResource.h"
 #include "../common/CMutex.h"
+
 #include <queue>
 
 class CTransactionMangaer;
@@ -26,15 +27,15 @@ typedef std::queue<CNode *> NodeQueue;
 class CTrafficManager: public CBase, public IWorkable {
 public:
 	static CTrafficManager *instance();
-	static void destory();
+	static none_ destory();
 
-	void work();
+	none_ work();
 
 	// called by CNodeGroup thread
-	void recycleNode(CNode *node);
+	none_ recycleNode(CNode *node);
 
 protected:
-	virtual bool working();
+	virtual bool_ working();
 
 private:
 	static CTrafficManager *_tm;
@@ -42,24 +43,24 @@ private:
 	CTrafficManager();
 	virtual ~CTrafficManager();
 
-	void addNodes();
-	void delNode(CNode *node);
+	none_ addNodes();
+	none_ delNode(CNode *node);
 
-	static void setNonBlocking(int iSocket);
+	static none_ setNonBlocking(b4_ iSocket);
 
 	CNodeGroup *allocateGroup();
 
-	bool _running;
+	bool_ _running;
 
-	int _listenFd;
-	int _epollFd;
+	b4_ _listenFd;
+	b4_ _epollFd;
 
 	// store all nodes
 	CResource<CNode, CTrafficManager> _res;
 
 	// store all groups
 	CNodeGroup *_groups;
-	unsigned int _curGroupIndex;
+	ub4_ _curGroupIndex;
 
 	CWorker _worker;
 

@@ -41,13 +41,13 @@ public:
 	virtual ~CTransaction();
 
 	// Called by CTrafficManager thread
-	void onAttach();
+	none_ onAttach();
 
 	// Called by CTrafficManager thread
-	void onDetach();
+	none_ onDetach();
 
 	// Called by CNodeGroup thread
-	bool onMessage(const Message::TMsg *msg);
+	bool_ onMessage(const Message::TMsg *msg);
 
 	CNode *getNode() {
 		return _node;
@@ -57,28 +57,28 @@ public:
 		return _status;
 	}
 
-	unsigned int getId() const {
+	ub4_ getId() const {
 		return _id;
 	}
 
-	void over(ETransactionExitReason reason);
+	none_ over(ETransactionExitReason reason);
 
 protected:
-	bool onStart(unsigned short length, unsigned int sequence,
+	bool_ onStart(ub2_ length, ub4_ sequence,
 			const Message::TMBHandshake *data);
-	bool onRealtime(unsigned int sequence, const Message::TMBRealtime *data);
-	bool onTimer(const Message::TMBTimer *data);
-	bool onStop(const Message::TMBOver *data);
+	bool_ onRealtime(ub4_ sequence, const Message::TMBRealtime *data);
+	bool_ onTimer(const Message::TMBTimer *data);
+	bool_ onStop(const Message::TMBOver *data);
 
 private:
 	CNode *_node;
 
 	ETransactionStatus _status;
 
-	unsigned int _id;
+	ub4_ _id;
 
 	// store timer for heartbeat checking
-	long unsigned int _keepLiveTimerId;
+	ub8_ _keepLiveTimerId;
 };
 
 #endif // _C_TRANSACTION_H_

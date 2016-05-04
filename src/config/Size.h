@@ -15,10 +15,10 @@
 
 namespace Size {
 
-const unsigned int NAME = Length::NAME + 1;
-const unsigned int IP_V4 = Length::IP_V4 + 1;
-const unsigned int URL = Length::URL + 1;
-const unsigned int INI_FILE = Length::INI_FILE + 1;
+const ub4_ NAME = Length::NAME + 1;
+const ub4_ IP_V4 = Length::IP_V4 + 1;
+const ub4_ URL = Length::URL + 1;
+const ub4_ INI_FILE = Length::INI_FILE + 1;
 
 // TODO define your lengths here according to Lenght.h
 

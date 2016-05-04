@@ -20,36 +20,36 @@ namespace Config {
 
 namespace App {
 
-char INI_FILE[Size::INI_FILE];
-unsigned int RUN_AS_DAEMON;
-char NAME[Size::NAME];
-unsigned int BASE_BUILD;
-char LISTEN_IP[Size::IP_V4];
-unsigned short LISTEN_PORT;
-unsigned int EPOLL_WAIT_EVENT_NUM;
-unsigned int NODE_GROUP_NUM;
-unsigned int NODE_GROUP_SIZE;
-unsigned int TOTAL_SUPPORT_USER_NUM;
-unsigned int TOTAL_THREAD_NUM;
-unsigned int MESSAGE_MAX_NUM_IN_QUEUE;
-unsigned int THREAD_STACK_SIZE;
-unsigned int HANDSHAKE_INTERVAL;
+c1_ INI_FILE[Size::INI_FILE];
+ub4_ RUN_AS_DAEMON;
+c1_ NAME[Size::NAME];
+ub4_ BASE_BUILD;
+c1_ LISTEN_IP[Size::IP_V4];
+ub2_ LISTEN_PORT;
+ub4_ EPOLL_WAIT_EVENT_NUM;
+ub4_ NODE_GROUP_NUM;
+ub4_ NODE_GROUP_SIZE;
+ub4_ TOTAL_SUPPORT_USER_NUM;
+ub4_ TOTAL_THREAD_NUM;
+ub4_ MESSAGE_MAX_NUM_IN_QUEUE;
+ub4_ THREAD_STACK_SIZE;
+ub4_ HANDSHAKE_INTERVAL;
 
 }
 
 namespace Redis {
 
-char HOST[Size::URL];
-unsigned short PORT;
-unsigned int TIMEOUT;
+c1_ HOST[Size::URL];
+ub2_ PORT;
+ub4_ TIMEOUT;
 
 }
 
-void initializeApp(CIniReader *conf);
-void initializeRedis(CIniReader *conf);
+none_ initializeApp(CIniReader *conf);
+none_ initializeRedis(CIniReader *conf);
 
-void initialize(const char *confFileName) {
-	if (NULL != confFileName && 0 < strlen(confFileName)
+none_ initialize(const s1_ confFileName) {
+	if (null_v != confFileName && 0 < strlen(confFileName)
 			&& Size::INI_FILE > strlen(confFileName)) {
 		strncpy(App::INI_FILE, confFileName, Size::INI_FILE);
 	} else {
@@ -62,9 +62,9 @@ void initialize(const char *confFileName) {
 	initializeRedis(conf);
 }
 
-void initializeApp(CIniReader *conf) {
-	assert(NULL != conf);
-	const char *section = "app";
+none_ initializeApp(CIniReader *conf) {
+	assert(null_v != conf);
+	const s1_ section = "app";
 
 	if (conf->readInt(section, "run_as_daemon", &App::RUN_AS_DAEMON)
 			|| 0 == App::RUN_AS_DAEMON) {
@@ -120,15 +120,15 @@ void initializeApp(CIniReader *conf) {
 		App::THREAD_STACK_SIZE = DefaultConfig::App::THREAD_STACK_SIZE;
 	}
 
-	if (conf->readInt(section, "handshake_interval", &App::HANDSHAKE_INTERVAL)
+	if (conf->readInt(section, "handshake_b4_erval", &App::HANDSHAKE_INTERVAL)
 			|| 0 == App::HANDSHAKE_INTERVAL) {
 		App::HANDSHAKE_INTERVAL = DefaultConfig::App::HANDSHAKE_INTERVAL;
 	}
 }
 
-void initializeRedis(CIniReader *conf) {
-	assert(NULL != conf);
-	const char *section = "redis";
+none_ initializeRedis(CIniReader *conf) {
+	assert(null_v != conf);
+	const s1_ section = "redis";
 
 	if (conf->readString(section, "host", Redis::HOST, Size::URL)
 			|| 0 == Redis::HOST[0]) {

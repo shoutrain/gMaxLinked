@@ -19,32 +19,33 @@ class IWorkable;
 
 class CWorker: public CBase {
 public:
-	CWorker(unsigned int threadStackSize /* k */);
+	CWorker(ub4_ threadStackSize /* k */);
 	virtual ~CWorker();
 
-	// sync is invalid unless bInformed = true
-	void work(IWorkable *workable, bool informed = false, bool sync = false);
+	// sync is invalid unless bInformed = true_v
+	none_ work(IWorkable *workable, bool_ informed = false_v,
+			bool_ sync = false_v);
 
-	static void stop() {
-		_workingCondition = false;
+	static none_ stop() {
+		_workingCondition = false_v;
 	}
 
-	static unsigned int getTotalNum() {
+	static ub4_ getTotalNum() {
 		return _workerNum;
 	}
 
 private:
-	static void *run(void *object);
+	static obj_ run(obj_ object);
 
 	static CMutex _mutexWorker;
-	static unsigned int _workerNum;
-	static bool _workingCondition;
+	static ub4_ _workerNum;
+	static bool_ _workingCondition;
 
-	bool createThread();
+	bool_ createThread();
 
-	unsigned int _threadStackSize; // k
+	ub4_ _threadStackSize; // k
 	pthread_t _handle;
-	bool _informed;
+	bool_ _informed;
 	CMutex _mutexInformed;
 	CCond _condInformed;
 

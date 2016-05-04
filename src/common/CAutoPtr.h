@@ -8,7 +8,6 @@
  ============================================================================
  */
 
-
 #ifndef _C_AUTO_PTR_H_
 #define _C_AUTO_PTR_H_
 
@@ -18,7 +17,7 @@ template<class T>
 class CAutoPtr: public CBase {
 public:
 
-	explicit CAutoPtr(T *p = NULL) :
+	explicit CAutoPtr(T *p = null_v) :
 			_p(p) {
 	}
 
@@ -33,7 +32,7 @@ public:
 	T *release() {
 		T *p = _p;
 
-		_p = NULL;
+		_p = null_v;
 
 		return p;
 	}
@@ -42,7 +41,7 @@ public:
 		return _p;
 	}
 
-	void reset(const T *p = NULL) {
+	none_ reset(const T *p = null_v) {
 		if (p != _p) {
 			delete _p;
 			_p = p;
@@ -67,7 +66,7 @@ public:
 
 private:
 	// Cannot new this class
-	void *operator new(size_t size);
+	obj_ operator new(size_t size);
 	T *_p;
 };
 

@@ -25,12 +25,12 @@
 #include <sys/types.h>
 #include <sys/syslog.h>
 
-const char DAEMON_NAME[] = "gMaxLinked";
-const char RUN_AS_USER[] = "root";
-const char LOCK_FILE[] = "/var/lock/subsys/gMaxLinked";
-const char PID_FILE[] = "/var/run/gMaxLinked.pid";
+const c1_ DAEMON_NAME[] = "gMaxLinked";
+const c1_ RUN_AS_USER[] = "root";
+const c1_ LOCK_FILE[] = "/var/lock/subsys/gMaxLinked";
+const c1_ PID_FILE[] = "/var/run/gMaxLinked.pid";
 
-static void sigHandler(int sigNo) {
+static none_ sigHandler(b4_ sigNo) {
 	switch (sigNo) {
 	case SIGALRM:
 		exit(EXIT_FAILURE);
@@ -44,7 +44,7 @@ static void sigHandler(int sigNo) {
 	}
 }
 
-static void runAsDaemon() {
+static none_ runAsDaemon() {
 	pid_t pid, sid, parent;
 
 	// already a daemon
@@ -94,7 +94,7 @@ static void runAsDaemon() {
 		exit(EXIT_FAILURE);
 	}
 
-	// at this point we are executing as the child process
+	// at this pob4_ we are executing as the child process
 	parent = getppid();
 
 	// cancel certain signals
@@ -134,7 +134,7 @@ static void runAsDaemon() {
 	kill(parent, SIGUSR1);
 
 	// create the pid file
-	int fd = open(PID_FILE, O_RDWR | O_CREAT, 0640);
+	b4_ fd = open(PID_FILE, O_RDWR | O_CREAT, 0640);
 
 	if (fd < 0) {
 		syslog(LOG_ERR, "unable to create pid file %s, code=%d (%s)", PID_FILE,
@@ -142,19 +142,19 @@ static void runAsDaemon() {
 		exit(EXIT_FAILURE);
 	}
 
-	// get pid and write into PID_FILE
-	char temp[16];
+	// get pid and write b4_o PID_FILE
+	b1_ temp[16];
 
 	pid = getpid();
 	memset(temp, 0, 16);
-	sprintf(temp, "%d", pid);
+	sprb4_f(temp, "%d", pid);
 	write(fd, temp, strlen(temp) + 1);
 	close(fd);
 }
 
 // we need to configure the system manually to make the feature work
 // shell(as root): ulimit -c unlimited
-static void enableDump() {
+static none_ enableDump() {
 	// core dump
 	struct rlimit res;
 
@@ -164,9 +164,9 @@ static void enableDump() {
 	setrlimit(RLIMIT_CORE, &res);
 }
 
-static void run(int argc, char **argv) {
+static none_ run(b4_ argc, s1_ *argv) {
 	// load configure file
-	char *conf = NULL;
+	s1_ conf = null_v;
 
 	if (2 <= argc) {
 		conf = argv[1];
@@ -192,12 +192,12 @@ static void run(int argc, char **argv) {
 	log_info("%s is ended.", DAEMON_NAME);
 }
 
-int main(int argc, char **argv) {
+b4_ main(b4_ argc, s1_ *argv) {
 	if (!CBase::initialize()) {
 		return 1;
 	}
 
-	// initialize the logging interface
+	// initialize the logging b4_erface
 	openlog(DAEMON_NAME, LOG_USER | LOG_PID, LOG_LOCAL5);
 	syslog(LOG_INFO, "starting...");
 

@@ -24,17 +24,17 @@ enum ETimerStatus {
 };
 
 struct TTimer {
-	unsigned int period; // seconds
-	void *parameter;
-	unsigned int times;
+	ub4_ period; // seconds
+	obj_ parameter;
+	ub4_ times;
 
-	int baseS;
-	int baseUS;
+	b4_ baseS;
+	b4_ baseUS;
 
 	TTimer *previous;
 	TTimer *next;
 
-	int status;
+	b4_ status;
 };
 
 #include <queue>
@@ -44,23 +44,22 @@ typedef std::queue<TTimer *> OperatorQueue;
 // A timer manager, which can accept 1 second as the minimal unit
 class CTimerManager: public CBase, public IWorkable {
 public:
-	CTimerManager(unsigned int maxTimerNum, unsigned int threadStackSize);
+	CTimerManager(ub4_ maxTimerNum, ub4_ threadStackSize);
 	virtual ~CTimerManager();
 
 	// timers == 0: Infinite
 	// return timer id or 0: failed
-	long unsigned int setTimer(unsigned int period, void *parameter,
-			unsigned int times = 1);
-	void killTimer(long unsigned int timerId);
+	ub8_ setTimer(ub4_ period, obj_ parameter,	ub4_ times = 1);
+	none_ killTimer(ub8_ timerId);
 
-	virtual bool working();
+	virtual bool_ working();
 
 protected:
-	virtual bool onTimer(long unsigned int timerId, void *parameter) = 0;
+	virtual bool_ onTimer(ub8_ timerId, obj_ parameter) = 0;
 
 private:
-	void addTimer(TTimer *timer);
-	void delTimer(TTimer *timer);
+	none_ addTimer(TTimer *timer);
+	none_ delTimer(TTimer *timer);
 
 	CWorker _worker;
 	CMutex _mutex;

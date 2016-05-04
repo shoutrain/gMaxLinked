@@ -13,7 +13,7 @@
 
 #include <sys/errno.h>
 
-CMutex::CMutex(bool recursive) {
+CMutex::CMutex(bool_ recursive) {
 	pthread_mutexattr_t attr;
 
 	pthread_mutexattr_init(&attr);
@@ -35,8 +35,8 @@ CMutex::~CMutex() {
 	}
 }
 
-bool CMutex::lock(bool check) {
-	int ret = 0;
+bool_ CMutex::lock(bool_ check) {
+	b4_ ret = 0;
 
 	if (check) {
 		ret = pthread_mutex_trylock(&_mutex);
@@ -45,7 +45,7 @@ bool CMutex::lock(bool check) {
 	}
 
 	if (EBUSY == ret && check) {
-		return false;
+		return false_v;
 	}
 
 	if (0 != ret) {
@@ -55,13 +55,13 @@ bool CMutex::lock(bool check) {
 			log_fatal("CMutex::Lock: failed to call pthread_mutext_lock");
 		}
 
-		return false;
+		return false_v;
 	}
 
-	return true;
+	return true_v;
 }
 
-void CMutex::unlock() {
+none_ CMutex::unlock() {
 	if (0 != pthread_mutex_unlock(&_mutex)) {
 		log_fatal("CMutex::Unlock: failed to call pthread_mutex_unlock");
 	}

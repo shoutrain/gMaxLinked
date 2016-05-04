@@ -18,20 +18,20 @@ class CTransaction;
 
 #include <map>
 
-typedef std::map<unsigned int, CTransaction *> TransactionMap;
+typedef std::map<ub4_, CTransaction *> TransactionMap;
 
 class CTransactionManager: public CTimerManager {
 public:
 	static CTransactionManager *instance();
 
-	void work();
+	none_ work();
 
-	CTransaction *findTransaction(unsigned int id);
-	bool registerTransaction(CTransaction *transaction);
-	bool unregisterTransaction(CTransaction *transaction);
+	CTransaction *findTransaction(ub4_ id);
+	bool_ registerTransaction(CTransaction *transaction);
+	bool_ unregisterTransaction(CTransaction *transaction);
 
 protected:
-	bool onTimer(long unsigned int timerId, void *parameter);
+	bool_ onTimer(ub8_ timerId, obj_ parameter);
 
 private:
 	CTransactionManager();

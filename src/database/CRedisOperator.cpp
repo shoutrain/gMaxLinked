@@ -17,7 +17,7 @@
 #include <time.h>
 
 CRedisOperator::CRedisOperator() {
-	_context = NULL;
+	_context = null_v;
 }
 
 CRedisOperator::~CRedisOperator() {
@@ -26,7 +26,7 @@ CRedisOperator::~CRedisOperator() {
 	}
 }
 
-bool CRedisOperator::connect() {
+bool_ CRedisOperator::connect() {
 	if (_context) {
 		redisFree(_context);
 	}
@@ -36,47 +36,47 @@ bool CRedisOperator::connect() {
 	_context = redisConnectWithTimeout(Config::Redis::HOST, Config::Redis::PORT,
 			timeout);
 
-	if (NULL == _context) {
+	if (null_v == _context) {
 		log_fatal("CRedisOperator:connect: cannot allocate redis context");
 
-		return false;
+		return false_v;
 	}
 
 	if (_context->err) {
 		log_fatal("CRedisOperator::connect: failed to call "
 				"redisConnectWithTimeout-%s", _context->errstr);
 		redisFree(_context);
-		_context = NULL;
+		_context = null_v;
 
-		return false;
+		return false_v;
 	}
 
-	return true;
+	return true_v;
 }
 
-void CRedisOperator::disconnect() {
+none_ CRedisOperator::disconnect() {
 	if (_context) {
 		redisFree(_context);
-		_context = NULL;
+		_context = null_v;
 	}
 }
 
-bool CRedisOperator::errorHandler(void *reply, bool freeReply) {
-	if (NULL == _context) {
-		return false;
+bool_ CRedisOperator::errorHandler(obj_ reply, bool_ freeReply) {
+	if (null_v == _context) {
+		return false_v;
 	}
 
-	bool ret = true;
+	bool_ ret = true_v;
 	redisReply *rr = (redisReply *) reply;
 
 	if (!rr) {
 		log_error("CRedisOperator::errorHandler: %s", _context->errstr);
 		connect(); // reconnect
-		ret = false;
+		ret = false_v;
 	} else {
 		if (REDIS_REPLY_ERROR == rr->type) {
 			log_error("CRedisOperator::errorHandler: %s", rr->str);
-			ret = false;
+			ret = false_v;
 			freeReplyObject(rr);
 		} else if (freeReply) {
 			freeReplyObject(rr);

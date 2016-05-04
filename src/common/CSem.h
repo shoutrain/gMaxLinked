@@ -8,7 +8,6 @@
  ============================================================================
  */
 
-
 #ifndef _C_SEM_H_
 #define _C_SEM_H_
 
@@ -18,13 +17,13 @@
 
 class CSem: public CLock {
 public:
-	CSem(unsigned int value = 1);
+	CSem(ub4_ value = 1);
 	virtual ~CSem();
 
-	bool lock(bool check = false);
-	void unlock();
+	bool_ lock(bool_ check = false_v);
+	none_ unlock();
 
-	unsigned int getValue();
+	ub4_ getValue();
 
 private:
 	sem_t _sem;

@@ -16,10 +16,10 @@
 namespace Message {
 
 // pdu with fixed size is easier to develop and has higher performance
-const unsigned int MSG_FIXED_LENGTH = 128;
+const ub4_ MSG_FIXED_LENGTH = 128;
 
 // MSG_FIXEDLENGTH - sizeof(THeader) - sizeof(TExtra)
-const unsigned int MSG_BODY_MAX_LENGTH = 116;
+const ub4_ MSG_BODY_MAX_LENGTH = 116;
 
 ////////////////////////////////////
 // message bit operators
@@ -28,51 +28,51 @@ const unsigned int MSG_BODY_MAX_LENGTH = 116;
 //   0001 0000 0000 0000 - MSGACK
 //   0000 XXXX 0000 0000 - message category
 //   0000 0000 XXXX XXXX - message command id
-const unsigned short MS_ACK = 0x1000;
+const ub2_ MS_ACK = 0x1000;
 
 ////////////////////////////////////
 // message command ids
 ////////////////////////////////////
 // for network messages
-const unsigned short MC_HANDSHAKE = 0x0001;
-const unsigned short MC_REALTIME = 0x0101;
+const ub2_ MC_HANDSHAKE = 0x0001;
+const ub2_ MC_REALTIME = 0x0101;
 
-// for internal messages
-const unsigned short MC_TIMER = 0x0f01;
-const unsigned short MC_OVER = 0x0f02;
+// for b4_ernal messages
+const ub2_ MC_TIMER = 0x0f01;
+const ub2_ MC_OVER = 0x0f02;
 
 #pragma pack(1)
 
 struct THeader {
-	unsigned short length;
-	unsigned short cmd;
+	ub2_ length;
+	ub2_ cmd;
 };
 
 struct TExtra {
-	long unsigned int transaction;
-	unsigned int sequence;
+	ub8_ transaction;
+	ub4_ sequence;
 };
 
 struct TMsg {
 	THeader header;
 	TExtra extra;
-	unsigned char body[MSG_BODY_MAX_LENGTH];
+	ub1_ body[MSG_BODY_MAX_LENGTH];
 };
 
 struct TMBAck {
-	int result;
+	b4_ result;
 };
 
 struct TOnlyOnceFields {
-	unsigned short softwareVersion;
+	ub2_ softwareVersion;
 };
 
 struct TMBTimer {
-	long unsigned int timerId;
+	ub8_ timerId;
 };
 
 struct TMBOver {
-	int reason;
+	b4_ reason;
 };
 
 #pragma pack()
