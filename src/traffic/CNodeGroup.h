@@ -33,7 +33,7 @@ public:
 	// called by CTrafficManager thread
 	none_ detach(CNode *node);
 
-	// called by CTrafficManager and CTransactionManager threads
+	// called by CTrafficManager thread or CTransactionManager thread
 	bool_ putMessage(const Message::TMsg *msg);
 
 	CRedisOperator &ro() {
@@ -50,7 +50,7 @@ private:
 	CCond _cond;
 
 	CLoopBuffer _queue;
-	Message::TMsg _curMsg;
+	ub1_ _buffer[Message::MSG_MAX_LENGTH];
 
 	CRedisOperator _ro;
 

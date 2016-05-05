@@ -20,15 +20,13 @@ public:
 	CNode();
 	virtual ~CNode();
 
-	// called when CNodeGroup attach the node
-	// called by CTrafficManager thread
+	// called by CTrafficManager thread when CNodeGroup attaches the node
 	none_ onAttach(CNodeGroup *node, const s1_ ip, ub2_ port, b4_ fd);
 
-	// called when CNodeGroup detach the node
-	// called by CTrafficManager thread
+	// called by CTrafficManager thread when CNodeGroup detaches the node
 	none_ onDetach();
 
-	// receive data from client and put them b4_o the input queue
+	// receive data from client and put them into the input queue
 	// called by CTrafficManager thread
 	bool_ recv();
 
@@ -70,8 +68,11 @@ private:
 	CNodeGroup *_group;
 
 	// message buffer
-	ub4_ _recvOffset;
-	ub1_ _recvBuffer[Message::MSG_FIXED_LENGTH];
+	ub2_ _recvOffset;
+	ub2_ _recvDueSize;
+	ub1_ _recvBuffer[Message::MSG_MAX_LENGTH];
+
+	none_ _handleRecvErrors();
 };
 
 #endif // _C_NODE_H_

@@ -27,8 +27,7 @@ CNodeGroup::CNodeGroup() :
 CNodeGroup::~CNodeGroup() {
 }
 
-none_ CNodeGroup::attach(CNode *node, const s1_ ip, ub2_ port,
-		b4_ fd) {
+none_ CNodeGroup::attach(CNode *node, const s1_ ip, ub2_ port, b4_ fd) {
 	assert(node);
 
 	if (0 == _nodeNum) {
@@ -53,13 +52,12 @@ bool_ CNodeGroup::putMessage(const Message::TMsg *msg) {
 	assert(msg);
 	CAutoLock al(&_mutex);
 
-	log_debug("[%p %p]CNodeGroup::putMessage: write a message",
-			(obj_  )msg->extra.transaction, this);
+	log_debug("[%p %p]CNodeGroup::putMessage: write a message", (obj_ )msg->ext,
+			this);
 
-	if (!_queue.write((const ub1_ *) msg, Message::MSG_FIXED_LENGTH)) {
-		log_crit(
-				"[%p %p]CNodeGroup::putMessage: the size of queue is too small",
-				(obj_  )msg->extra.transaction, this);
+	if (!_queue.write((const ub1_ *) msg, msg->size)) {
+		log_crit("[%p %p]CNodeGroup::putMessage: the size of queue is too "
+				"small", (obj_ )msg->ext, this);
 
 		return false_v;
 	}
@@ -72,24 +70,30 @@ bool_ CNodeGroup::putMessage(const Message::TMsg *msg) {
 bool_ CNodeGroup::working() {
 	_mutex.lock();
 
-	if (Message::MSG_FIXED_LENGTH > _queue.getUsedSize()) {
+	if (0 == _queue.getUsedSize()) {
 		_cond.lock();
 	}
 
-	ub4_ n = _queue.read((ub1_ *) &_curMsg,
-			Message::MSG_FIXED_LENGTH);
-	assert(Message::MSG_FIXED_LENGTH == n);
+	ub4_ n = _queue.read(_buffer, sizeof(ub2_));
+	assert(sizeof(ub2_) == n);
 
-	log_debug("[%p %p]CNodeGroup::working: read a message",
-			(obj_  )_curMsg.extra.transaction, this);
+	ub2_ size = (ub2_) _buffer;
+
+	n = _queue.read(_buffer + sizeof(ub2_), size);
+	assert(size == n);
+
+	Message::TMsg *msg = (Message::TMsg *) _buffer;
+	assert(msg->ext);
+
+	log_debug("[%p %p]CNodeGroup::working: read a message", (obj_ )msg->ext,
+			this);
 	_mutex.unlock();
 
-	assert(_curMsg.extra.transaction);
-	CTransaction *transaction = (CTransaction *) _curMsg.extra.transaction;
+	CTransaction *transaction = (CTransaction *) msg->ext;
 	ETransactionStatus status = transaction->getStatus();
 
 	if (CONNECTED == status || READY == status || OVER == status) {
-		if (!transaction->onMessage(&_curMsg)) {
+		if (!transaction->onMessage(msg)) {
 			assert(OVER == status);
 			CTrafficManager::instance()->recycleNode(transaction->getNode());
 		}

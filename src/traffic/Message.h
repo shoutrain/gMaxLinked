@@ -15,56 +15,56 @@
 
 namespace Message {
 
-// pdu with fixed size is easier to develop and has higher performance
-const ub4_ MSG_FIXED_LENGTH = 128;
-
-// MSG_FIXEDLENGTH - sizeof(THeader) - sizeof(TExtra)
-const ub4_ MSG_BODY_MAX_LENGTH = 116;
+const ub4_ MSG_MAX_LENGTH = 512;
 
 ////////////////////////////////////
-// message bit operators
+// type values in THeader
 ////////////////////////////////////
-// message direction(the 12th bits):
-//   0001 0000 0000 0000 - MSGACK
-//   0000 XXXX 0000 0000 - message category
-//   0000 0000 XXXX XXXX - message command id
-const ub2_ MS_ACK = 0x1000;
+const ub2_ MT_CONTROLLER = 0x0001;
+const ub2_ MT_ACCOUNT = 0x0002;
+const ub2_ MT_SERVICE = 0x0003;
+
+const ub2_ MT_SIGN_ACK = 0x0010;
+const ub2_ MT_SIGN_LOG = 0x0020;
+const ub2_ MT_SIGN_FEE = 0x0040;
 
 ////////////////////////////////////
-// message command ids
+// cmd values in THeader
 ////////////////////////////////////
-// for network messages
-const ub2_ MC_HANDSHAKE = 0x0001;
-const ub2_ MC_REALTIME = 0x0101;
+// network messages: 0xXXXX except 0x8XXX
+const ub2_ MC_HEART_BEAT= 0x0001;
 
-// for b4_ernal messages
-const ub2_ MC_TIMER = 0x0f01;
-const ub2_ MC_OVER = 0x0f02;
+// internal messages: 0x8XXX
+const ub2_ MC_TIMER = 0x8001;
+const ub2_ MC_OVER = 0x8002;
 
+////////////////////////////////////
+// lang values in THeader
+////////////////////////////////////
+const ub1_ ML_CN = 0x01;
+const ub1_ ML_TW = 0x02;
+const ub2_ ML_EN = 0x03;
+
+////////////////////////////////////
+// PDUs
+////////////////////////////////////
 #pragma pack(1)
 
 struct THeader {
-	ub2_ length;
+	ub2_ size;
+	ub2_ type;
 	ub2_ cmd;
+	ub2_ ver;
+	ub1_ lang;
+	ub4_ seq;
+	ub8_ stmp;
+	ub8_ ext;
 };
 
-struct TExtra {
-	ub8_ transaction;
-	ub4_ sequence;
-};
+typedef THeader TMsg;
 
-struct TMsg {
-	THeader header;
-	TExtra extra;
-	ub1_ body[MSG_BODY_MAX_LENGTH];
-};
-
-struct TMBAck {
-	b4_ result;
-};
-
-struct TOnlyOnceFields {
-	ub2_ softwareVersion;
+struct THeaderAck {
+	ub2_ code;
 };
 
 struct TMBTimer {

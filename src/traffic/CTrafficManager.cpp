@@ -241,8 +241,8 @@ bool_ CTrafficManager::working() {
 		if (events[i].events & EPOLLIN) {
 			if (false_v == node->recv()) {
 				log_debug("[%p %s:%u]CTrafficManager::working: "
-						"failed to receive data",
-						node->getTransaction(), node->getIp(), node->getPort());
+						"failed to receive data", node->getTransaction(),
+						node->getIp(), node->getPort());
 				node->getTransaction()->over(CANNOT_RECV_DATA);
 			}
 		}
