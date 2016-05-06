@@ -38,7 +38,7 @@ none_ CTransactionManager::work() {
 	CTrafficManager::instance()->work();
 }
 
-CTransaction *CTransactionManager::findTransaction(ub4_ id) {
+CTransaction *CTransactionManager::findTransaction(ub8_ id) {
 	assert(id);
 	CAutoLock al(&_mutex);
 
@@ -55,7 +55,7 @@ bool_ CTransactionManager::registerTransaction(CTransaction *transaction) {
 	assert(transaction);
 	CAutoLock al(&_mutex);
 
-	ub4_ id = transaction->getId();
+	ub8_ id = transaction->getId();
 	TransactionMap::iterator pos = _transactionMap.find(id);
 
 	if (_transactionMap.end() != pos) {
@@ -63,8 +63,8 @@ bool_ CTransactionManager::registerTransaction(CTransaction *transaction) {
 	}
 
 	_transactionMap.insert(TransactionMap::value_type(id, transaction));
-	log_info("[%p]CTransactionManager::registerTransaction: transaction id-%u, "
-			"total registered transactions-%lu", transaction, id,
+	log_info("[%p]CTransactionManager::registerTransaction: transaction "
+			"id-%lu, total registered transactions-%lu", transaction, id,
 			_transactionMap.size());
 
 	return true_v;
@@ -73,7 +73,7 @@ bool_ CTransactionManager::registerTransaction(CTransaction *transaction) {
 bool_ CTransactionManager::unregisterTransaction(CTransaction *transaction) {
 	assert(transaction);
 	CAutoLock al(&_mutex);
-	ub4_ id = transaction->getId();
+	ub8_ id = transaction->getId();
 
 	if (0 == id) {
 		return false_v;
@@ -88,8 +88,8 @@ bool_ CTransactionManager::unregisterTransaction(CTransaction *transaction) {
 	assert(transaction == pos->second);
 	_transactionMap.erase(pos);
 	log_info(
-			"[%p]CTransactionManager::unregisterTransaction: transaction id-%u, "
-					"total registered transactions-%lu", transaction, id,
+			"[%p]CTransactionManager::unregisterTransaction: transaction "
+			"id-%lu, total registered transactions-%lu", transaction, id,
 			_transactionMap.size());
 
 	return true_v;
@@ -102,13 +102,17 @@ bool_ CTransactionManager::onTimer(ub8_ timerId, obj_ parameter) {
 	log_debug("[%p]CTransactionManager::onTimer: timer id-%p", transaction,
 			(obj_ )timerId);
 
-	Message::TMsg msg;
-	Message::TMBTimer *body = (Message::TMBTimer *) msg.body;
+	Message::TPDUOnTimer msg;
 
-	msg.header.length = sizeof(Message::TMBTimer);
-	msg.header.cmd = Message::MC_TIMER;
-	msg.extra.transaction = (ub8_) transaction;
-	body->timerId = timerId;
+	msg.header.size = sizeof(Message::TPDUOnTimer);
+	msg.header.type = Message::MT_CONTROL;
+	msg.header.cmd = Message::MC_ON_TIMER;
+	msg.header.stmp = CBase::now();
+	msg.header.ver = 0x0100;
+	msg.header.lang = 1;
+	msg.header.seq = 0;
+	msg.header.ext = (ub_8) & this;
+	msg.timerId= (ub8_)timerId;
 
 	transaction->getNode()->getGroup()->putMessage(&msg);
 

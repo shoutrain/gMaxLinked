@@ -22,6 +22,7 @@ public:
 
 	static log4c_category_t *getCategory();
 	static b4_ sleep(ub4_ seconds, ub4_ ms = 0);
+	static ub8_ now();
 
 protected:
 	CBase();

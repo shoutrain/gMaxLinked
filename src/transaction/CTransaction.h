@@ -25,7 +25,7 @@ enum ETransactionStatus {
 };
 
 enum ETransactionExitReason {
-	WRONG_STATUS,
+	WRONG_STATUS = 1,
 	CLIENT_TOO_OLD,
 	TIME_OUT,
 	UNKNOWN_MESSAGE,
@@ -64,18 +64,17 @@ public:
 	none_ over(ETransactionExitReason reason);
 
 protected:
-	bool_ onStart(ub2_ length, ub4_ sequence,
-			const Message::TMBHandshake *data);
-	bool_ onRealtime(ub4_ sequence, const Message::TMBRealtime *data);
-	bool_ onTimer(const Message::TMBTimer *data);
-	bool_ onStop(const Message::TMBOver *data);
+	bool_ onStart(const Message::TPDUHandShake *msg);
+	bool_ onHeartBeat(const Message::TPDUHeartBeat *msg);
+	bool_ onTimer(const Message::TPDUOnTimer *data);
+	bool_ onStop(const Message::TPUDOnOver *data);
 
 private:
 	CNode *_node;
 
 	ETransactionStatus _status;
 
-	ub4_ _id;
+	ub8_ _id;
 
 	// store timer for heartbeat checking
 	ub8_ _keepLiveTimerId;

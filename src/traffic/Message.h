@@ -20,7 +20,7 @@ const ub4_ MSG_MAX_LENGTH = 512;
 ////////////////////////////////////
 // type values in THeader
 ////////////////////////////////////
-const ub2_ MT_CONTROLLER = 0x0001;
+const ub2_ MT_CONTROL = 0x0001;
 const ub2_ MT_ACCOUNT = 0x0002;
 const ub2_ MT_SERVICE = 0x0003;
 
@@ -32,11 +32,12 @@ const ub2_ MT_SIGN_FEE = 0x0040;
 // cmd values in THeader
 ////////////////////////////////////
 // network messages: 0xXXXX except 0x8XXX
-const ub2_ MC_HEART_BEAT= 0x0001;
+const ub2_ MC_HAND_SHAKE = 0x0001;
+const ub2_ MC_HEART_BEAT = 0x0002;
 
 // internal messages: 0x8XXX
-const ub2_ MC_TIMER = 0x8001;
-const ub2_ MC_OVER = 0x8002;
+const ub2_ MC_ON_TIMER = 0x8001;
+const ub2_ MC_ON_OVER = 0x8002;
 
 ////////////////////////////////////
 // lang values in THeader
@@ -63,15 +64,37 @@ struct THeader {
 
 typedef THeader TMsg;
 
-struct THeaderAck {
+struct TAck {
 	ub2_ code;
 };
 
-struct TMBTimer {
+struct TPDUHandShake {
+	THeader header;
+	ub4_ build;
+	ub8_ id;
+};
+
+struct TPDUHandShakeAck {
+	THeader header;
+	TAck ack;
+};
+
+struct TPDUHeartBeat {
+	THeader header;
+};
+
+struct TPDUHeartBeatAck {
+	THeader header;
+	TAck ack;
+};
+
+struct TPDUOnTimer {
+	THeader header;
 	ub8_ timerId;
 };
 
-struct TMBOver {
+struct TPUDOnOver {
+	THeader header;
 	b4_ reason;
 };
 

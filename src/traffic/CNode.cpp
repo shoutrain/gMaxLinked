@@ -128,6 +128,8 @@ bool_ CNode::recv() {
 }
 
 bool_ CNode::send(const Message::TMsg *msg) {
+	msg->ext = 0;
+
 	ssize_t n;
 	ub1_ *buffer = (ub1_ *) msg;
 	ub4_ offset = 0;

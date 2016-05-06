@@ -33,6 +33,7 @@ none_ CTransaction::onAttach() {
 	assert(_id == 0);
 	assert(_status == FREE);
 	_status = CONNECTED;
+
 	// set timer to wait the next message coming
 	_keepLiveTimerId = CTransactionManager::instance()->setTimer(
 			Config::App::HANDSHAKE_INTERVAL, this, 1);
@@ -48,29 +49,31 @@ none_ CTransaction::onDetach() {
 none_ CTransaction::over(ETransactionExitReason reason) {
 	_status = OVER;
 
-	Message::TMsg msg;
-	Message::TMBOver *body = (Message::TMBOver *) &msg.body;
+	Message::TPUDOnOver msg;
 
-	msg.header.length = sizeof(Message::TMBOver);
-	msg.header.cmd = Message::MC_OVER;
-	msg.extra.transaction = (ub8_) this;
-	body->reason = (b4_) reason;
+	msg.header.size = sizeof(Message::TPUDOnOver);
+	msg.header.type = Message::MT_CONTROL;
+	msg.header.cmd = Message::MC_ON_OVER;
+	msg.header.stmp = CBase::now();
+	msg.header.ver = 0x0100;
+	msg.header.lang = 1;
+	msg.header.seq = 0;
+	msg.header.ext = (ub_8) & this;
+	msg.reason = (b4_) reason;
 
 	_node->getGroup()->putMessage(&msg);
 }
 
 bool_ CTransaction::onMessage(const Message::TMsg *msg) {
 	switch (msg->header.cmd) {
-	case Message::MC_HANDSHAKE:
-		return onStart(msg->header.length, msg->extra.sequence,
-				(Message::TMBHandshake *) msg->body);
-	case Message::MC_REALTIME:
-		return onRealtime(msg->extra.sequence,
-				(Message::TMBRealtime *) msg->body);
-	case Message::MC_TIMER:
-		return onTimer((Message::TMBTimer *) msg->body);
-	case Message::MC_OVER:
-		return onStop((Message::TMBOver *) msg->body);
+	case Message::MC_HAND_SHAKE:
+		return onStart((Message::TPDUHandShake *) msg);
+	case Message::MC_HEART_BEAT:
+		return onHeartBeat((Message::TPDUHeartBeat *) msg);
+	case Message::MC_ON_TIMER:
+		return onTimer((Message::TPDUOnTimer *) msg);
+	case Message::MC_ON_OVER:
+		return onStop((Message::TPUDOnOver *) msg);
 	default:
 		log_info("[%p]CTransaction::onMessage: unknown message-%x, current "
 				"status-%d", this, msg->header.cmd, _status);
@@ -80,8 +83,7 @@ bool_ CTransaction::onMessage(const Message::TMsg *msg) {
 	}
 }
 
-bool_ CTransaction::onStart(ub2_ length, ub4_ sequence,
-		const Message::TMBHandshake *data) {
+bool_ CTransaction::onStart(const Message::TPDUHandShake* msg) {
 	log_debug("[%p]CTransaction::onStart: current status-%d", this, _status);
 
 	if (CONNECTED != _status) {
@@ -94,42 +96,42 @@ bool_ CTransaction::onStart(ub2_ length, ub4_ sequence,
 	CTransactionManager::instance()->killTimer(_keepLiveTimerId);
 	_keepLiveTimerId = 0;
 
-	Message::TMsg msg;
-	Message::TMBAck *ack = (Message::TMBAck *) msg.body;
+	Message::TPDUHandShakeAck msgAck;
 
-	msg.header.length = sizeof(Message::TMBAck);
-	msg.header.cmd = Message::MC_HANDSHAKE | Message::MS_ACK;
-	msg.extra.sequence = sequence;
+	memcpy(&msgAck, msg, sizeof(Message::THeader));
+	msgAck.header.size = sizeof(Message::TPDUHandShakeAck);
+	msgAck.header.type |= MT_SIGN_ACK;
+	msgAck.header.stmp = CBase::now();
+	msgAck.ack.code = 0;
 
-	if (sizeof(Message::TMBHandshake) != length
-			|| Config::App::BASE_BUILD > data->build) {
-		log_notice("[%p]CTransaction::onStart: client with %u or above is "
-				"necessary, now it's %u", this, Config::App::BASE_BUILD,
-				data->build);
-		ack->result = 1;
-		getNode()->send(&msg);
+	if (Config::App::BASE_BUILD > msg->build) {
+		log_notice("[%p]CTransaction::onStart: client version with %u or above "
+				" is necessary, now it's %u", this, Config::App::BASE_BUILD,
+				msg->build);
+		msgAck.ack.code = CLIENT_TOO_OLD;
+		getNode()->send((Message::TMsg *)&msgAck);
 		over(CLIENT_TOO_OLD);
 
 		return true_v;
 	}
 
+	_id = msg->id;
+
 	if (!CTransactionManager::instance()->registerTransaction(this)) {
+		log_notice("[%p]CTransaction::onStart: there is a on-line transaction "
+				"with id of %lu", this, _id);
 		_id = 0;
-		log_notice("[%p]CTransaction::onStart: it's the same transtion %s "
-				"on-line", this, data->serialNum);
-		ack->result = 3;
-		getNode()->send(&msg);
+		msgAck.ack.code = SAME_TRANSACTION_ID;
+		getNode()->send((Message::TMsg *)&msgAck);
 		over(SAME_TRANSACTION_ID);
 
 		return true_v;
 	}
 
-	_node->getGroup()->ro().handleHandshake(_id, _node->getIp(),
-			_node->getPort(), data);
 	_status = READY;
-	ack->result = 0;
+	msgAck.ack.code = 0;
 
-	if (!getNode()->send(&msg)) {
+	if (!getNode()->send((Message::TMsg *)&msgAck)) {
 		return true_v;
 	}
 
@@ -139,9 +141,8 @@ bool_ CTransaction::onStart(ub2_ length, ub4_ sequence,
 	return true_v;
 }
 
-bool_ CTransaction::onRealtime(ub4_ sequence,
-		const Message::TMBRealtime *data) {
-	log_debug("[%p]CTransaction::onRealtime: current status-%d", this, _status);
+bool_ CTransaction::onHeartBeat(const Message::TPDUHeartBeat *msg) {
+	log_debug("[%p]CTransaction::onHeartBeat: current status-%d", this, _status);
 
 	if (READY != _status) {
 		over(WRONG_STATUS);
@@ -152,18 +153,16 @@ bool_ CTransaction::onRealtime(ub4_ sequence,
 	assert(_keepLiveTimerId);
 	CTransactionManager::instance()->killTimer(_keepLiveTimerId);
 	_keepLiveTimerId = 0;
-	_node->getGroup()->ro().handleEngineFields(_id, &data->ef);
-	_node->getGroup()->ro().handleGeneratorFields(_id, &data->gf);
 
-	Message::TMsg msg;
-	Message::TMBAck *ack = (Message::TMBAck *) msg.body;
+	Message::TPDUHeartBeatAck msgAck;
 
-	msg.header.length = sizeof(Message::TMBAck);
-	msg.header.cmd = Message::MC_REALTIME | Message::MS_ACK;
-	msg.extra.sequence = sequence;
-	ack->result = 0;
+	memcpy(&msgAck, msg, sizeof(Message::THeader));
+	msgAck.header.size = sizeof(Message::TPDUHeartBeatAck);
+	msgAck.header.type |= MT_SIGN_ACK;
+	msgAck.header.stmp = CBase::now();
+	msgAck.ack.code = 0;
 
-	if (!getNode()->send(&msg)) {
+	if (!getNode()->send((Message::TMsg *)&msgAck)) {
 		return true_v;
 	}
 
@@ -173,38 +172,36 @@ bool_ CTransaction::onRealtime(ub4_ sequence,
 	return true_v;
 }
 
-bool_ CTransaction::onTimer(const Message::TMBTimer *data) {
+bool_ CTransaction::onTimer(const Message::TPDUOnTimer *msg) {
 	if (_keepLiveTimerId == data->timerId) {
 		log_debug("[%p]CTransaction::onTimer: current status-%d", this,
 				_status);
 		over(TIME_OUT);
 	} else {
-		// invalid time id
+		assert(false_v);
+		// invalid time id and do nothing
 	}
 
 	return true_v;
 }
 
-bool_ CTransaction::onStop(const Message::TMBOver *data) {
+bool_ CTransaction::onStop(const Message::TPUDOnOver *msg) {
 	log_debug("[%p]CTransaction::onStop: current status-%d", this, _status);
 	_status = OVER;
 
-	switch (data->reason) {
+	switch (msg->reason) {
 	case WRONG_STATUS:
-		log_debug("[%p]CTransaction::onStop: reason-%s", this,
-				"wrong status");
+		log_debug("[%p]CTransaction::onStop: reason-%s", this, "wrong status");
 		break;
 	case CLIENT_TOO_OLD:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
 				"client too old");
 		break;
 	case SAME_TRANSACTION_ID:
-		log_debug("[%p]CTransaction::onStop: reason-%s", this,
-				"same owner id");
+		log_debug("[%p]CTransaction::onStop: reason-%s", this, "same owner id");
 		break;
 	case TIME_OUT:
-		log_debug("[%p]CTransaction::onStop: reason-%s", this,
-				"time out");
+		log_debug("[%p]CTransaction::onStop: reason-%s", this, "time out");
 		break;
 	case UNKNOWN_MESSAGE:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
@@ -223,7 +220,7 @@ bool_ CTransaction::onStop(const Message::TMBOver *data) {
 				"cannot recv data");
 		break;
 	default:
-		assert(0);
+		assert(false_v);
 	}
 
 	if (_keepLiveTimerId) {
@@ -233,7 +230,6 @@ bool_ CTransaction::onStop(const Message::TMBOver *data) {
 
 	if (_id) {
 		CTransactionManager::instance()->unregisterTransaction(this);
-		_node->getGroup()->ro().handleOffline(_id);
 		_id = 0;
 	}
 
