@@ -21,7 +21,7 @@ public:
 	virtual ~CNode();
 
 	// called by CTrafficManager thread when CNodeGroup attaches the node
-	none_ onAttach(CNodeGroup *node, const s1_ ip, ub2_ port, b4_ fd);
+	none_ onAttach(CNodeGroup *node, const c1_ *ip, ub2_ port, b4_ fd);
 
 	// called by CTrafficManager thread when CNodeGroup detaches the node
 	none_ onDetach();
@@ -32,9 +32,9 @@ public:
 
 	// send data to client
 	// called by CNodeGroup thread
-	bool_ send(const Message::TMsg *msg);
+	bool_ send(Message::TMsg *msg);
 
-	const s1_ getIp() const {
+	const c1_ *getIp() const {
 		return _ip;
 	}
 

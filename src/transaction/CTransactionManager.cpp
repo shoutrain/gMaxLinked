@@ -87,8 +87,7 @@ bool_ CTransactionManager::unregisterTransaction(CTransaction *transaction) {
 
 	assert(transaction == pos->second);
 	_transactionMap.erase(pos);
-	log_info(
-			"[%p]CTransactionManager::unregisterTransaction: transaction "
+	log_info("[%p]CTransactionManager::unregisterTransaction: transaction "
 			"id-%lu, total registered transactions-%lu", transaction, id,
 			_transactionMap.size());
 
@@ -111,10 +110,10 @@ bool_ CTransactionManager::onTimer(ub8_ timerId, obj_ parameter) {
 	msg.header.ver = 0x0100;
 	msg.header.lang = 1;
 	msg.header.seq = 0;
-	msg.header.ext = (ub_8) & this;
-	msg.timerId= (ub8_)timerId;
+	msg.header.ext = (ub8_) this;
+	msg.timerId = (ub8_) timerId;
 
-	transaction->getNode()->getGroup()->putMessage(&msg);
+	transaction->getNode()->getGroup()->putMessage((Message::TMsg *) &msg);
 
 	return true_v;
 }

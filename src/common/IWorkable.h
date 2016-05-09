@@ -11,6 +11,8 @@
 #ifndef _I_WORKABLE_H_
 #define _I_WORKABLE_H_
 
+#include "BaseType.h"
+
 class IWorkable {
 public:
 

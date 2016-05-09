@@ -24,16 +24,13 @@ typedef float fb4_;
 typedef double fb8_;
 
 typedef char c1_;
-typedef c1_ *s1_;
 
 typedef enum {
 	false_v,
 	true_v
 } bool_;
 
-enum {
-	null_v
-};
+#define null_v 0
 
 typedef void none_;
 typedef void * obj_;

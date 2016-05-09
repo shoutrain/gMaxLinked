@@ -11,6 +11,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#include "../common/BaseType.h"
 #include "Size.h"
 
 namespace Config {
@@ -47,7 +48,7 @@ namespace Config {
 
 #endif
 
-	none_ initialize(const s1_ confFileName);
+	none_ initialize(const c1_ *confFileName);
 
 }
 

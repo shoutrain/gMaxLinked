@@ -11,9 +11,9 @@
 #ifndef _C_BASE_H_
 #define _C_BASE_H_
 
-#include <assert.h>
+#include "BaseType.h"
+
 #include <log4c.h>
-#include <ctype.h>
 
 class CBase {
 public:

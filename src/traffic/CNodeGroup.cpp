@@ -18,8 +18,7 @@
 
 CNodeGroup::CNodeGroup() :
 		_worker(Config::App::THREAD_STACK_SIZE), _cond(&_mutex), _queue(
-				Config::App::MESSAGE_MAX_NUM_IN_QUEUE
-						* Message::MSG_FIXED_LENGTH) {
+				Config::App::MESSAGE_MAX_NUM_IN_QUEUE * Message::MSG_MAX_LENGTH) {
 	_nodeNum = 0;
 	_worker.work(this, true_v);
 }
@@ -27,7 +26,7 @@ CNodeGroup::CNodeGroup() :
 CNodeGroup::~CNodeGroup() {
 }
 
-none_ CNodeGroup::attach(CNode *node, const s1_ ip, ub2_ port, b4_ fd) {
+none_ CNodeGroup::attach(CNode *node, const c1_ *ip, ub2_ port, b4_ fd) {
 	assert(node);
 
 	if (0 == _nodeNum) {
@@ -77,7 +76,7 @@ bool_ CNodeGroup::working() {
 	ub4_ n = _queue.read(_buffer, sizeof(ub2_));
 	assert(sizeof(ub2_) == n);
 
-	ub2_ size = (ub2_) _buffer;
+	ub2_ size = (ub2_) *_buffer;
 
 	n = _queue.read(_buffer + sizeof(ub2_), size);
 	assert(size == n);

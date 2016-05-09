@@ -48,7 +48,7 @@ ub4_ TIMEOUT;
 none_ initializeApp(CIniReader *conf);
 none_ initializeRedis(CIniReader *conf);
 
-none_ initialize(const s1_ confFileName) {
+none_ initialize(const c1_ *confFileName) {
 	if (null_v != confFileName && 0 < strlen(confFileName)
 			&& Size::INI_FILE > strlen(confFileName)) {
 		strncpy(App::INI_FILE, confFileName, Size::INI_FILE);
@@ -64,7 +64,7 @@ none_ initialize(const s1_ confFileName) {
 
 none_ initializeApp(CIniReader *conf) {
 	assert(null_v != conf);
-	const s1_ section = "app";
+	const c1_ *section = "app";
 
 	if (conf->readInt(section, "run_as_daemon", &App::RUN_AS_DAEMON)
 			|| 0 == App::RUN_AS_DAEMON) {
@@ -128,7 +128,7 @@ none_ initializeApp(CIniReader *conf) {
 
 none_ initializeRedis(CIniReader *conf) {
 	assert(null_v != conf);
-	const s1_ section = "redis";
+	const c1_ *section = "redis";
 
 	if (conf->readString(section, "host", Redis::HOST, Size::URL)
 			|| 0 == Redis::HOST[0]) {

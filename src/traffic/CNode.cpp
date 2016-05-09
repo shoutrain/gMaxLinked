@@ -30,7 +30,7 @@ CNode::CNode() :
 CNode::~CNode() {
 }
 
-none_ CNode::onAttach(CNodeGroup *group, const s1_ ip, ub2_ port, b4_ fd) {
+none_ CNode::onAttach(CNodeGroup *group, const c1_ *ip, ub2_ port, b4_ fd) {
 	_group = group;
 	_recvOffset = 0;
 	_recvDueSize = 0;
@@ -78,13 +78,13 @@ bool_ CNode::recv() {
 			_recvOffset += n;
 
 			if (sizeof(Message::THeader) == _recvOffset) {
-				_recvDueSize = (ub2_) _recvBuffer;
+				_recvDueSize = (ub2_) *_recvBuffer;
 
 				// maybe the whole PDU is just a header
 				if (sizeof(Message::THeader) == _recvDueSize) {
 					Message::TMsg *msg = (Message::TMsg *) _recvBuffer;
 
-					header->ext = &_transation;
+					msg->ext = (ub8_)&_transaction;
 					_group->putMessage(msg);
 					_recvOffset = 0;
 					_recvDueSize = 0;
@@ -116,7 +116,7 @@ bool_ CNode::recv() {
 			if (_recvDueSize == _recvOffset) {
 				Message::TMsg *msg = (Message::TMsg*) _recvBuffer;
 
-				header->ext = &_transation;
+				msg->ext = (ub8_)&_transaction;
 				_group->putMessage(msg);
 				_recvOffset = 0;
 				_recvDueSize = 0;
@@ -127,7 +127,7 @@ bool_ CNode::recv() {
 	return true_v;
 }
 
-bool_ CNode::send(const Message::TMsg *msg) {
+bool_ CNode::send(Message::TMsg *msg) {
 	msg->ext = 0;
 
 	ssize_t n;

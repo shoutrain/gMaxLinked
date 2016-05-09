@@ -2,9 +2,9 @@
  ============================================================================
  Name        : gMaxLinked.cpp
  Author      : Rafael Gu
- Version     : 1.0
+ Version     : 1.0.0
  Copyright   : GPL
- Description : gMaxLinked Application Entry
+ Description :
  ============================================================================
  */
 
@@ -118,7 +118,8 @@ static none_ runAsDaemon() {
 	}
 
 	// change the current working directory
-	// this prevents the current directory from being locked; hence not being able to remove it
+	// this prevents the current directory from being locked; hence not being
+	// able to remove it
 	if ((chdir("/tmp")) < 0) {
 		syslog(LOG_ERR, "unable to change directory to %s, code %d (%s)",
 				"/tmp", errno, strerror(errno));
@@ -147,7 +148,7 @@ static none_ runAsDaemon() {
 
 	pid = getpid();
 	memset(temp, 0, 16);
-	sprb4_f(temp, "%d", pid);
+	sprintf(temp, "%d", pid);
 	write(fd, temp, strlen(temp) + 1);
 	close(fd);
 }
@@ -164,9 +165,9 @@ static none_ enableDump() {
 	setrlimit(RLIMIT_CORE, &res);
 }
 
-static none_ run(b4_ argc, s1_ *argv) {
+static none_ run(b4_ argc, c1_ **argv) {
 	// load configure file
-	s1_ conf = null_v;
+	c1_ *conf = null_v;
 
 	if (2 <= argc) {
 		conf = argv[1];
@@ -192,7 +193,7 @@ static none_ run(b4_ argc, s1_ *argv) {
 	log_info("%s is ended.", DAEMON_NAME);
 }
 
-b4_ main(b4_ argc, s1_ *argv) {
+b4_ main(b4_ argc, c1_ **argv) {
 	if (!CBase::initialize()) {
 		return 1;
 	}

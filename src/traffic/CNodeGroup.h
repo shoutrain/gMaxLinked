@@ -28,7 +28,7 @@ public:
 	virtual ~CNodeGroup();
 
 	// called by CTrafficManager thread
-	none_ attach(CNode *node, const s1_ ip, ub2_ port, b4_ fd);
+	none_ attach(CNode *node, const c1_ *ip, ub2_ port, b4_ fd);
 
 	// called by CTrafficManager thread
 	none_ detach(CNode *node);

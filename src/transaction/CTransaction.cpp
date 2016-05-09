@@ -58,14 +58,14 @@ none_ CTransaction::over(ETransactionExitReason reason) {
 	msg.header.ver = 0x0100;
 	msg.header.lang = 1;
 	msg.header.seq = 0;
-	msg.header.ext = (ub_8) & this;
+	msg.header.ext = (ub8_) this;
 	msg.reason = (b4_) reason;
 
-	_node->getGroup()->putMessage(&msg);
+	_node->getGroup()->putMessage((Message::TMsg *)&msg);
 }
 
 bool_ CTransaction::onMessage(const Message::TMsg *msg) {
-	switch (msg->header.cmd) {
+	switch (msg->cmd) {
 	case Message::MC_HAND_SHAKE:
 		return onStart((Message::TPDUHandShake *) msg);
 	case Message::MC_HEART_BEAT:
@@ -76,7 +76,7 @@ bool_ CTransaction::onMessage(const Message::TMsg *msg) {
 		return onStop((Message::TPUDOnOver *) msg);
 	default:
 		log_info("[%p]CTransaction::onMessage: unknown message-%x, current "
-				"status-%d", this, msg->header.cmd, _status);
+				"status-%d", this, msg->cmd, _status);
 		over(UNKNOWN_MESSAGE);
 
 		return true_v;
@@ -100,7 +100,7 @@ bool_ CTransaction::onStart(const Message::TPDUHandShake* msg) {
 
 	memcpy(&msgAck, msg, sizeof(Message::THeader));
 	msgAck.header.size = sizeof(Message::TPDUHandShakeAck);
-	msgAck.header.type |= MT_SIGN_ACK;
+	msgAck.header.type |= Message::MT_SIGN_ACK;
 	msgAck.header.stmp = CBase::now();
 	msgAck.ack.code = 0;
 
@@ -158,7 +158,7 @@ bool_ CTransaction::onHeartBeat(const Message::TPDUHeartBeat *msg) {
 
 	memcpy(&msgAck, msg, sizeof(Message::THeader));
 	msgAck.header.size = sizeof(Message::TPDUHeartBeatAck);
-	msgAck.header.type |= MT_SIGN_ACK;
+	msgAck.header.type |= Message::MT_SIGN_ACK;
 	msgAck.header.stmp = CBase::now();
 	msgAck.ack.code = 0;
 
@@ -173,7 +173,7 @@ bool_ CTransaction::onHeartBeat(const Message::TPDUHeartBeat *msg) {
 }
 
 bool_ CTransaction::onTimer(const Message::TPDUOnTimer *msg) {
-	if (_keepLiveTimerId == data->timerId) {
+	if (_keepLiveTimerId == msg->timerId) {
 		log_debug("[%p]CTransaction::onTimer: current status-%d", this,
 				_status);
 		over(TIME_OUT);

@@ -16,7 +16,7 @@
 #include <string.h>
 #include <ctype.h>
 
-CIniReader::CIniReader(const s1_ fileName) {
+CIniReader::CIniReader(const c1_ *fileName) {
 	if (null_v == fileName || 0 == fileName[0]) {
 		log_fatal("configure file name is not right");
 		exit(0);
@@ -70,7 +70,7 @@ b4_ CIniReader::isRightBrace(b1_ c) {
 	return ']' == c ? 1 : 0;
 }
 
-b4_ CIniReader::parseFile(const s1_ section, const s1_ key, b4_ *secS,
+b4_ CIniReader::parseFile(const c1_ *section, const c1_ *key, b4_ *secS,
 		b4_ *secE, b4_ *keyS, b4_ *keyE, b4_ *valueS, b4_ *valueE) {
 	b4_ i = 0;
 
@@ -142,7 +142,7 @@ b4_ CIniReader::parseFile(const s1_ section, const s1_ key, b4_ *secS,
 	return 1;
 }
 
-b4_ CIniReader::readString(const s1_ section, const s1_ key, s1_ value,
+b4_ CIniReader::readString(const c1_ *section, const c1_ *key, c1_ *value,
 		ub4_ size) {
 	if (null_v == section || 0 == section[0] || null_v == key || 0 == key[0]
 			|| null_v == value || 0 == size) {
@@ -172,7 +172,7 @@ b4_ CIniReader::readString(const s1_ section, const s1_ key, s1_ value,
 	return 0;
 }
 
-b4_ CIniReader::readByte(const s1_ section, const s1_ key, ub1_ *value) {
+b4_ CIniReader::readByte(const c1_ *section, const c1_ *key, ub1_ *value) {
 	c1_ val[32] = { 0 };
 	b4_ ret = readString(section, key, val, 32);
 
@@ -185,7 +185,7 @@ b4_ CIniReader::readByte(const s1_ section, const s1_ key, ub1_ *value) {
 	return 0;
 }
 
-b4_ CIniReader::readShort(const s1_ section, const s1_ key, ub2_ *value) {
+b4_ CIniReader::readShort(const c1_ *section, const c1_ *key, ub2_ *value) {
 	c1_ val[32] = { 0 };
 	b4_ ret = readString(section, key, val, 32);
 
@@ -198,7 +198,7 @@ b4_ CIniReader::readShort(const s1_ section, const s1_ key, ub2_ *value) {
 	return 0;
 }
 
-b4_ CIniReader::readInt(const s1_ section, const s1_ key, ub4_ *value) {
+b4_ CIniReader::readInt(const c1_ *section, const c1_ *key, ub4_ *value) {
 	c1_ val[32] = { 0 };
 	b4_ ret = readString(section, key, val, 32);
 

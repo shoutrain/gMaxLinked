@@ -42,11 +42,11 @@ b4_ CBase::sleep(ub4_ ss, ub4_ mss) {
 	return select(0, null_v, null_v, null_v, &delay);
 }
 
-ub8_ now() {
+ub8_ CBase::now() {
 	timeval tv;
 
 	if (0 != gettimeofday(&tv, null_v)) {
-		log_fatal('CBase::now: failed to call gettimeofday');
+		log_fatal("CBase::now: failed to call gettimeofday");
 
 		return 0;
 	}
