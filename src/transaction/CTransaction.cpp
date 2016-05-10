@@ -36,7 +36,7 @@ none_ CTransaction::onAttach() {
 
 	// set timer to wait the next message coming
 	_keepLiveTimerId = CTransactionManager::instance()->setTimer(
-			Config::App::HANDSHAKE_INTERVAL, this, 1);
+			Config::App::HEARTBEAT_INTERVAL, this, 1);
 }
 
 none_ CTransaction::onDetach() {
@@ -136,7 +136,7 @@ bool_ CTransaction::onStart(const Message::TPDUHandShake* msg) {
 	}
 
 	_keepLiveTimerId = CTransactionManager::instance()->setTimer(
-			Config::App::HANDSHAKE_INTERVAL, this, 1);
+			Config::App::HEARTBEAT_INTERVAL, this, 1);
 
 	return true_v;
 }
@@ -167,7 +167,7 @@ bool_ CTransaction::onHeartBeat(const Message::TPDUHeartBeat *msg) {
 	}
 
 	_keepLiveTimerId = CTransactionManager::instance()->setTimer(
-			Config::App::HANDSHAKE_INTERVAL, this, 1);
+			Config::App::HEARTBEAT_INTERVAL, this, 1);
 
 	return true_v;
 }

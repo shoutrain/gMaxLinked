@@ -36,7 +36,7 @@ namespace DefaultConfig {
 
 		const ub4_ THREAD_STACK_SIZE = 4096;// k
 
-		const ub4_ HANDSHAKE_INTERVAL = 10;// s
+		const ub4_ HEARTBEAT_INTERVAL = 10;// s
 
 	}
 

@@ -33,7 +33,7 @@ ub4_ TOTAL_SUPPORT_USER_NUM;
 ub4_ TOTAL_THREAD_NUM;
 ub4_ MESSAGE_MAX_NUM_IN_QUEUE;
 ub4_ THREAD_STACK_SIZE;
-ub4_ HANDSHAKE_INTERVAL;
+ub4_ HEARTBEAT_INTERVAL;
 
 }
 
@@ -120,9 +120,9 @@ none_ initializeApp(CIniReader *conf) {
 		App::THREAD_STACK_SIZE = DefaultConfig::App::THREAD_STACK_SIZE;
 	}
 
-	if (conf->readInt(section, "handshake_b4_erval", &App::HANDSHAKE_INTERVAL)
-			|| 0 == App::HANDSHAKE_INTERVAL) {
-		App::HANDSHAKE_INTERVAL = DefaultConfig::App::HANDSHAKE_INTERVAL;
+	if (conf->readInt(section, "heartbeat_interval", &App::HEARTBEAT_INTERVAL)
+			|| 0 == App::HEARTBEAT_INTERVAL) {
+		App::HEARTBEAT_INTERVAL = DefaultConfig::App::HEARTBEAT_INTERVAL;
 	}
 }
 
