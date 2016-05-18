@@ -10,3 +10,5 @@ Following libs is necessary for gMaxLinked:
 > pthread
 > hiredis
 > log4c
+
+Now the whole project doesn't work now.  I will make it work later, I mean after I finished my company's products development, which is based on gMaxLinked.
