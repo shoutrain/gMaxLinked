@@ -25,7 +25,8 @@ enum ETimerStatus {
 
 struct TTimer {
 	ub4_ period; // seconds
-	obj_ parameter;
+	obj_ parameterI;
+	obj_ parameterII;
 	ub4_ times;
 
 	b4_ baseS;
@@ -49,17 +50,19 @@ public:
 
 	// timers == 0: Infinite
 	// return timer id or 0: failed
-	ub8_ setTimer(ub4_ period, obj_ parameter,	ub4_ times = 1);
+	ub8_ setTimer(ub4_ period, obj_ parameterI, obj_ parameterII,
+			ub4_ times = 1);
 	none_ killTimer(ub8_ timerId);
 
 	virtual bool_ working();
 
 protected:
-	virtual bool_ onTimer(ub8_ timerId, obj_ parameter) = 0;
+	virtual bool_ __onTimer(ub8_ timerId, obj_ parameterI,
+			obj_ parameterII) = 0;
 
 private:
-	none_ addTimer(TTimer *timer);
-	none_ delTimer(TTimer *timer);
+	none_ _addTimer(TTimer *timer);
+	none_ _delTimer(TTimer *timer);
 
 	CWorker _worker;
 	CMutex _mutex;

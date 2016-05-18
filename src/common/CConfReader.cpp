@@ -8,15 +8,14 @@
  ============================================================================
  */
 
-#include "CIniReader.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
+#include <CConfReader.h>
 
-CIniReader::CIniReader(const c1_ *fileName) {
+CConfReader::CConfReader(const c1_ *fileName) {
 	if (null_v == fileName || 0 == fileName[0]) {
 		log_fatal("configure file name is not right");
 		exit(0);
@@ -51,40 +50,41 @@ CIniReader::CIniReader(const c1_ *fileName) {
 	fclose(file);
 }
 
-CIniReader::~CIniReader() {
+CConfReader::~CConfReader() {
 }
 
-b4_ CIniReader::isNewline(c1_ c) {
+b4_ CConfReader::_isNewline(c1_ c) {
 	return ('\n' == c || '\r' == c) ? 1 : 0;
 }
 
-b4_ CIniReader::isEndOfString(c1_ c) {
+b4_ CConfReader::_isEndOfString(c1_ c) {
 	return '\0' == c ? 1 : 0;
 }
 
-b4_ CIniReader::isLeftBarce(c1_ c) {
+b4_ CConfReader::_isLeftBarce(c1_ c) {
 	return '[' == c ? 1 : 0;
 }
 
-b4_ CIniReader::isRightBrace(b1_ c) {
+b4_ CConfReader::_isRightBrace(b1_ c) {
 	return ']' == c ? 1 : 0;
 }
 
-b4_ CIniReader::parseFile(const c1_ *section, const c1_ *key, b4_ *secS,
+b4_ CConfReader::_parseFile(const c1_ *section, const c1_ *key, b4_ *secS,
 		b4_ *secE, b4_ *keyS, b4_ *keyE, b4_ *valueS, b4_ *valueE) {
 	b4_ i = 0;
 
 	*secE = *secS = *keyE = *keyS = *valueS = *valueE = -1;
 
-	while (!isEndOfString(_buffer[i])) {
+	while (!_isEndOfString(_buffer[i])) {
 		// find the section
-		if ((0 == i || isNewline(_buffer[i - 1])) && isLeftBarce(_buffer[i])) {
+		if ((0 == i || _isNewline(_buffer[i - 1]))
+				&& _isLeftBarce(_buffer[i])) {
 			b4_ section_start = i + 1;
 
 			// find the ']'
 			do {
 				i++;
-			} while (!isRightBrace(_buffer[i]) && !isEndOfString(_buffer[i]));
+			} while (!_isRightBrace(_buffer[i]) && !_isEndOfString(_buffer[i]));
 
 			if (0
 					== strncmp(_buffer + section_start, section,
@@ -100,13 +100,14 @@ b4_ CIniReader::parseFile(const c1_ *section, const c1_ *key, b4_ *secS,
 				*secS = section_start - 1;
 				*secE = i - 1;
 
-				while (!(isNewline(_buffer[i - 1]) && isLeftBarce(_buffer[i]))
-						&& !isEndOfString(_buffer[i])) {
+				while (!(_isNewline(_buffer[i - 1]) && _isLeftBarce(_buffer[i]))
+						&& !_isEndOfString(_buffer[i])) {
 					//get a new line
 					b4_ newlineStart = i;
 					b4_ j = i;
 
-					while (!isNewline(_buffer[i]) && !isEndOfString(_buffer[i])) {
+					while (!_isNewline(_buffer[i])
+							&& !_isEndOfString(_buffer[i])) {
 						i++;
 					}
 
@@ -142,7 +143,7 @@ b4_ CIniReader::parseFile(const c1_ *section, const c1_ *key, b4_ *secS,
 	return 1;
 }
 
-b4_ CIniReader::readString(const c1_ *section, const c1_ *key, c1_ *value,
+b4_ CConfReader::readString(const c1_ *section, const c1_ *key, c1_ *value,
 		ub4_ size) {
 	if (null_v == section || 0 == section[0] || null_v == key || 0 == key[0]
 			|| null_v == value || 0 == size) {
@@ -155,7 +156,7 @@ b4_ CIniReader::readString(const c1_ *section, const c1_ *key, c1_ *value,
 
 	b4_ secS, secE, keyS, keyE, valueS, valueE;
 
-	if (!parseFile(section, key, &secS, &secE, &keyS, &keyE, &valueS,
+	if (!_parseFile(section, key, &secS, &secE, &keyS, &keyE, &valueS,
 			&valueE)) {
 		ub4_ length = valueE - valueS;
 
@@ -172,7 +173,7 @@ b4_ CIniReader::readString(const c1_ *section, const c1_ *key, c1_ *value,
 	return 0;
 }
 
-b4_ CIniReader::readByte(const c1_ *section, const c1_ *key, ub1_ *value) {
+b4_ CConfReader::readByte(const c1_ *section, const c1_ *key, ub1_ *value) {
 	c1_ val[32] = { 0 };
 	b4_ ret = readString(section, key, val, 32);
 
@@ -185,7 +186,7 @@ b4_ CIniReader::readByte(const c1_ *section, const c1_ *key, ub1_ *value) {
 	return 0;
 }
 
-b4_ CIniReader::readShort(const c1_ *section, const c1_ *key, ub2_ *value) {
+b4_ CConfReader::readShort(const c1_ *section, const c1_ *key, ub2_ *value) {
 	c1_ val[32] = { 0 };
 	b4_ ret = readString(section, key, val, 32);
 
@@ -198,7 +199,7 @@ b4_ CIniReader::readShort(const c1_ *section, const c1_ *key, ub2_ *value) {
 	return 0;
 }
 
-b4_ CIniReader::readInt(const c1_ *section, const c1_ *key, ub4_ *value) {
+b4_ CConfReader::readInt(const c1_ *section, const c1_ *key, ub4_ *value) {
 	c1_ val[32] = { 0 };
 	b4_ ret = readString(section, key, val, 32);
 

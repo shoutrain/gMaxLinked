@@ -17,7 +17,7 @@
 #include <map>
 
 class CNode;
-class CRedisOperator;
+class TTimer;
 
 // FREE->CONNECTED->READY->OVER->FREE
 enum ETransactionStatus {
@@ -29,11 +29,14 @@ enum ETransactionExitReason {
 	CLIENT_TOO_OLD,
 	TIME_OUT,
 	UNKNOWN_MESSAGE,
-	SAME_TRANSACTION_ID,
+	NO_THE_SESSION_FOUND,
+	SAME_SESSION_ID,
 	CONNECTION_BROKEN,
 	CONNECTION_ERROR,
 	CANNOT_RECV_DATA
 };
+
+typedef std::map<ub4_, ub8_> MapSeq2Timer;
 
 class CTransaction: public CBase {
 public:
@@ -57,27 +60,47 @@ public:
 		return _status;
 	}
 
-	ub4_ getId() const {
+	const c1_ *getSessionId() const {
+		return _sessionId;
+	}
+
+	ub8_ getId() const {
 		return _id;
 	}
 
 	none_ over(ETransactionExitReason reason);
 
 protected:
-	bool_ onStart(const Message::TPDUHandShake *msg);
-	bool_ onHeartBeat(const Message::TPDUHeartBeat *msg);
-	bool_ onTimer(const Message::TPDUOnTimer *data);
-	bool_ onStop(const Message::TPUDOnOver *data);
+	// Called by CNodeGroup thread
+	bool_ __onStart(const Message::TPDUHandShake *msg);
+
+	// Called by CNodeGroup thread
+	bool_ __onHeartBeat(const Message::TPDUHeartBeat *msg);
+
+	// Called by CNodeGroup thread
+	bool_ __onTimer(const Message::TPDUOnTimer *data);
+
+	// Called by CNodeGroup thread
+	bool_ __onStop(const Message::TPUDOnOver *data);
+
+	bool_ __send(Message::TMsg *msg, bool_ waitAck, bool_ interval = false_v);
 
 private:
 	CNode *_node;
 
 	ETransactionStatus _status;
 
+	c1_ _sessionId[Size::SESSION_ID];
 	ub8_ _id;
 
-	// store timer for heartbeat checking
+	// for heartbeat checking
 	ub8_ _keepLiveTimerId;
+	bool_ _heartbeat;
+
+	// for message ack
+	ub4_ _seqCounter;
+	MapSeq2Timer _mapSeq2Timer;
+
 };
 
 #endif // _C_TRANSACTION_H_

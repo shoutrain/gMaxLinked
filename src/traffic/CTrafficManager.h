@@ -34,7 +34,6 @@ public:
 	// called by CNodeGroup thread
 	none_ recycleNode(CNode *node);
 
-protected:
 	virtual bool_ working();
 
 private:
@@ -43,12 +42,12 @@ private:
 	CTrafficManager();
 	virtual ~CTrafficManager();
 
-	none_ addNodes();
-	none_ delNode(CNode *node);
+	none_ _addNodes();
+	none_ _delNode(CNode *node);
 
-	static none_ setNonBlocking(b4_ iSocket);
+	static none_ _setNonBlocking(b4_ socket);
 
-	CNodeGroup *allocateGroup();
+	CNodeGroup *_allocateGroup();
 
 	bool_ _running;
 

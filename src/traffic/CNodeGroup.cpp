@@ -78,8 +78,8 @@ bool_ CNodeGroup::working() {
 
 	ub2_ size = (ub2_) *_buffer;
 
-	n = _queue.read(_buffer + sizeof(ub2_), size);
-	assert(size == n);
+	n = _queue.read(_buffer + sizeof(ub2_), size - sizeof(ub2_));
+	assert(size == n + sizeof(ub2_));
 
 	Message::TMsg *msg = (Message::TMsg *) _buffer;
 	assert(msg->ext);
@@ -91,9 +91,9 @@ bool_ CNodeGroup::working() {
 	CTransaction *transaction = (CTransaction *) msg->ext;
 	ETransactionStatus status = transaction->getStatus();
 
-	if (CONNECTED == status || READY == status || OVER == status) {
+	if (CONNECTED == status || READY == status) {
 		if (!transaction->onMessage(msg)) {
-			assert(OVER == status);
+			assert(OVER == transaction->getStatus());
 			CTrafficManager::instance()->recycleNode(transaction->getNode());
 		}
 	}

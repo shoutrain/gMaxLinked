@@ -17,15 +17,15 @@ namespace DefaultConfig {
 
 	namespace App {
 
-		const c1_ INI_FILE[] = "gMaxLinked.conf";
+		const c1_ CONF_FILE[] = "RealtimeServer.conf";
 
 		const ub4_ RUN_AS_DAEMON = 0;
 
-		const c1_ NAME[] = "gMaxLinked";
-		const ub4_ BASE_BUILD = 13;
+		const c1_ NAME[] = "RealtimeServer";
+		const ub4_ BASE_BUILD = 0;
 
 		const c1_ LISTEN_IP[] = "0.0.0.0";
-		const b2_ LISTEN_PORT = 10505;
+		const ub2_ LISTEN_PORT = 10505;
 
 		const ub4_ EPOLL_WAIT_EVENT_NUM = 16;
 
@@ -43,9 +43,10 @@ namespace DefaultConfig {
 	namespace Redis {
 
 		const c1_ HOST[] = "localhost";
-		const b2_ PORT = 6379;
-		const b4_ TIMEOUT = 1; // s
-
+		const ub2_ PORT = 6379;
+		const ub4_ TIMEOUT = 1; // s
+		const c1_ AUTH[] = "123456";
+		const ub1_ DB = 0;
 	}
 
 }

@@ -35,7 +35,7 @@ public:
 	}
 
 private:
-	static obj_ run(obj_ object);
+	static obj_ _run(obj_ object);
 
 	static CMutex _mutexWorker;
 	static ub4_ _workerNum;

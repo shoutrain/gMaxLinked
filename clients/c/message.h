@@ -1,7 +1,7 @@
 #ifndef _message_h_
 #define _message_h_
 
-#include "size.h"
+#include "../../clients/c/size.h"
 
 // pdu with fixed size is easier to develop and has higher performance
 #define MSG_FIXED_LENGTH 128

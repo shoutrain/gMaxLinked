@@ -21,13 +21,15 @@ public:
 	CRedisOperator();
 	virtual ~CRedisOperator();
 
+	ub8_ verifyHandshake(const c1_ *sessionId);
+
 	bool_ connect();
 	none_ disconnect();
 
 private:
 	redisContext *_context;
 
-	bool_ errorHandler(obj_ reply, bool_ freeReply = true_v);
+	bool_ _errorHandler(obj_ reply, bool_ freeReply = true_v);
 };
 
 #endif // _C_REDIS_OPERATOR_H_

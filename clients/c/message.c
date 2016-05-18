@@ -1,4 +1,4 @@
-#include "message.h"
+#include "../../clients/c/message.h"
 
 const unsigned short MS_ACK = 0x1000;
 

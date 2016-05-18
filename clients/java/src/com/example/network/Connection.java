@@ -1,4 +1,4 @@
-package gMaxLinked.exmpale.android.network;
+package com.exmaple.network;
 
 import java.io.InterruptedIOException;
 import java.net.InetSocketAddress;
@@ -8,19 +8,16 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
-import android.util.Log;
-
-import gMaxLinked.exmpale.android.application.Config;
-import gMaxLinked.exmpale.android.msg.Header;
-import gMaxLinked.exmpale.android.msg.Msg;
-import gMaxLinked.exmpale.android.msg.MsgReq;
-import gMaxLinked.exmpale.android.msg.MsgRes;
+import com.avcon.conf.Config;
+import com.avcon.msg.MsgDefine;
+import com.avcon.tool.Log;
+import com.avcon.tool.NetworkDataHelper;
 
 public class Connection implements Runnable {
 
 	// Running formally
 	private final static int CONNECTION_TIME_OUT = 10000; // ms
-	private final static int WAIT_TIMES = 30;
+	private final static int WAIT_TIMES = 1;
 	private final static int RW_TIME_OUT = 3000; // ms
 	private final static int TIME_OUT = 500; // ms
 
@@ -29,10 +26,10 @@ public class Connection implements Runnable {
 
 	private Socket socket = null;
 	// Maybe it's just domain name instead of ip
-	private String server = Config.ANDROID_PUSH_URL;
+	private String server = Config.URL;
 	// It will keep the real ip
 	private String ip = null;
-	private int port = Config.ANDROID_PUSH_SERVER_PORT;
+	private int port = Config.PORT;
 	private InetSocketAddress address = null;
 
 	private boolean isRun = false;
@@ -83,12 +80,10 @@ public class Connection implements Runnable {
 		this.port = port;
 	}
 
-	public synchronized boolean send(MsgReq msg) {
+	public synchronized boolean send(byte[] msg) {
 		if (isRun && null != socket) {
 			try {
-				byte[] message = msg.getBytes();
-
-				socket.getOutputStream().write(message);
+				socket.getOutputStream().write(msg);
 				socket.getOutputStream().flush();
 
 				return true;
@@ -122,11 +117,12 @@ public class Connection implements Runnable {
 		isRunning = false;
 	}
 
-	ByteBuffer bufferHeader = ByteBuffer.allocate(Header.SIZE);
-	ByteBuffer bufferBody = null;
-	int total = 0;
-	Header header = new Header();
-	MsgRes res = null;
+	private final int sizeSize = 2; // the size of size field in header
+	private ByteBuffer bufferSize = ByteBuffer.allocate(sizeSize);
+	
+	private ByteBuffer bufferMsg = null;
+	private int offset = 0;
+	private int pendingSize = 0;
 
 	private void close() {
 		Log.d(Config.LOG_TAG, "Close socket");
@@ -146,16 +142,12 @@ public class Connection implements Runnable {
 				e.printStackTrace();
 			} finally {
 				socket = null;
-				res = null;
-				total = 0;
-				bufferBody = null;
 			}
 		}
 
-		bufferHeader.position(0);
-		bufferBody = null;
-		total = 0;
-		res = null;
+		bufferMsg = null;
+		offset = 0;
+		pendingSize = 0;
 	}
 
 	private boolean running() {
@@ -190,7 +182,7 @@ public class Connection implements Runnable {
 				// the given SocketAddress is invalid or not supported
 				// or
 				// the timeout value is negative
-				assert false;
+				assert (false);
 			} catch (Exception e) {
 				// error occurs while connecting
 				e.printStackTrace();
@@ -200,7 +192,7 @@ public class Connection implements Runnable {
 				return false;
 			}
 
-			listener.onConnected();
+			listener.onConnected(this);
 		}
 
 		int n = 0;
@@ -211,10 +203,9 @@ public class Connection implements Runnable {
 				return false;
 			}
 
-			if (null == res) {
+			if (0 == pendingSize) {
 				try {
-					n = socket.getInputStream().read(bufferHeader.array(),
-							total, bufferHeader.capacity() - total);
+					n = socket.getInputStream().read(bufferSize.array(), offset, bufferSize.capacity() - offset);
 				} catch (InterruptedIOException e) {
 					break;
 				} catch (Exception e) {
@@ -222,7 +213,7 @@ public class Connection implements Runnable {
 					close();
 					listener.onDisconnected(true);
 
-					break;
+					return false;
 				}
 
 				if (-1 == n) {
@@ -231,47 +222,37 @@ public class Connection implements Runnable {
 					close();
 					listener.onDisconnected(true);
 
-					break;
+					return false;
 				}
 
-				total += n;
+				offset += n;
 
-				if (Header.SIZE == total) {
-					bufferHeader.position(0);
-					total = 0;
-					res = header.parseHeader(bufferHeader);
-
-					if (null == res) {
-						Log.e(Config.LOG_TAG,
-								"The header of the buffer should not be null.");
+				if (sizeSize == offset) {
+					bufferSize.position(0);
+					pendingSize = NetworkDataHelper.getUShort(bufferSize);
+					
+					if (MsgDefine.MSG_MAX_LENGTH < pendingSize) {
+						// get invalid message
+						close();
+						listener.onError();
 
 						return false;
 					}
-
-					if (Header.SIZE == header.headerSize) {
-						if (res.parseBody(bufferBody)) {
-							listener.onMessage((Msg) res);
-						}
-
-						res = null;
-					} else {
-						assert (Header.SIZE < header.headerSize);
-						bufferBody = ByteBuffer.allocate(header.headerSize
-								- Header.SIZE);
-					}
+					
+					bufferMsg = ByteBuffer.allocate(pendingSize);
+					bufferMsg.put(bufferSize);
 				}
 			} else {
-				assert (null != bufferBody);
+				assert (null != bufferMsg);
 
 				try {
-					n = socket.getInputStream().read(bufferBody.array(), total,
-							bufferBody.capacity() - total);
+					n = socket.getInputStream().read(bufferMsg.array(), offset, bufferMsg.capacity() - offset);
 				} catch (Exception e) {
 					e.printStackTrace();
 					close();
 					listener.onDisconnected(true);
 
-					break;
+					return false;
 				}
 
 				if (-1 == n) {
@@ -279,19 +260,23 @@ public class Connection implements Runnable {
 					close();
 					listener.onDisconnected(true);
 
-					break;
+					return false;
 				}
 
-				total += n;
+				offset+= n;
 
-				if (header.headerSize - Header.SIZE == total) {
-					if (res.parseBody(bufferBody)) {
-						listener.onMessage((Msg) res);
+				if (pendingSize == offset) {
+					if (!listener.onMessage(bufferMsg)) {
+						Log.e(Config.LOG_TAG, "The message is invalid");
+						close();
+						listener.onError();
+						
+						return false;
 					}
 
-					res = null;
-					total = 0;
-					bufferBody = null;
+					bufferMsg = null;
+					offset = 0;
+					pendingSize = 0;
 				}
 			}
 		}

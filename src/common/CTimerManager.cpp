@@ -26,7 +26,8 @@ CTimerManager::CTimerManager(ub4_ maxTimerNum, ub4_ threadStackSize) :
 CTimerManager::~CTimerManager() {
 }
 
-ub8_ CTimerManager::setTimer(ub4_ period, obj_ parameter, ub4_ times) {
+ub8_ CTimerManager::setTimer(ub4_ period, obj_ parameterI, obj_ parameterII,
+		ub4_ times) {
 	TTimer *timer = _timerRes.allocate();
 
 	if (null_v == timer) {
@@ -40,7 +41,8 @@ ub8_ CTimerManager::setTimer(ub4_ period, obj_ parameter, ub4_ times) {
 	gettimeofday(&curTime, null_v);
 
 	timer->period = period;
-	timer->parameter = parameter;
+	timer->parameterI = parameterI;
+	timer->parameterII = parameterII;
 	timer->times = times;
 	timer->baseS = curTime.tv_sec;
 	timer->baseUS = curTime.tv_usec;
@@ -52,9 +54,8 @@ ub8_ CTimerManager::setTimer(ub4_ period, obj_ parameter, ub4_ times) {
 	_queueForAdd.push(timer);
 	_mutex.unlock();
 
-	log_debug(
-			"CTimerManager::setTimer: from-%p, time id-%p, period-%uSec, times-%u",
-			parameter, timer, period, times);
+	log_debug("CTimerManager::setTimer: time id-%p, period-%uSec, times-%u",
+			timer, period, times);
 
 	return (ub8_) timer;
 }
@@ -89,7 +90,7 @@ bool_ CTimerManager::working() {
 		TTimer *timer = _queueForAdd.front();
 
 		if (TO_BE_ADD == timer->status) {
-			addTimer(timer);
+			_addTimer(timer);
 		}
 
 		_queueForAdd.pop();
@@ -103,7 +104,7 @@ bool_ CTimerManager::working() {
 				_curTimer = _curTimer->next;
 			}
 
-			delTimer(pTimer);
+			_delTimer(pTimer);
 		}
 
 		_queueForDel.pop();
@@ -129,7 +130,8 @@ bool_ CTimerManager::working() {
 
 	if ((i < curTime.tv_sec)
 			|| (i == curTime.tv_sec && _curTimer->baseUS <= curTime.tv_usec)) {
-		if (onTimer((ub8_) _curTimer, _curTimer->parameter)) {
+		if (__onTimer((ub8_) _curTimer, _curTimer->parameterI,
+				_curTimer->parameterII)) {
 			_curTimer->baseS = curTime.tv_sec;
 			_curTimer->baseUS = curTime.tv_usec;
 
@@ -140,7 +142,7 @@ bool_ CTimerManager::working() {
 					TTimer *pCurTimer = _curTimer;
 
 					_curTimer = _curTimer->next;
-					delTimer(pCurTimer);
+					_delTimer(pCurTimer);
 
 					return true_v;
 				}
@@ -149,7 +151,7 @@ bool_ CTimerManager::working() {
 			TTimer *pCurTimer = _curTimer;
 
 			_curTimer = _curTimer->next;
-			delTimer(pCurTimer);
+			_delTimer(pCurTimer);
 
 			return true_v;
 		}
@@ -160,7 +162,7 @@ bool_ CTimerManager::working() {
 	return true_v;
 }
 
-none_ CTimerManager::addTimer(TTimer *timer) {
+none_ CTimerManager::_addTimer(TTimer *timer) {
 	assert(null_v != timer);
 
 	if (null_v == _timerList) {
@@ -175,7 +177,7 @@ none_ CTimerManager::addTimer(TTimer *timer) {
 	timer->status = ADDED;
 }
 
-none_ CTimerManager::delTimer(TTimer *timer) {
+none_ CTimerManager::_delTimer(TTimer *timer) {
 	assert(null_v != timer);
 
 	if (null_v == timer->previous) {

@@ -1,9 +1,8 @@
 #ifndef _connection_info_h_
 #define _connection_info_h_
 
-#include "size.h"
-
 #include <pthread.h>
+#include "../../clients/c/size.h"
 
 typedef int (*cnn_ON_CONNECTED)(unsigned int id);
 

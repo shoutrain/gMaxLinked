@@ -40,7 +40,6 @@ public:
 		return _ro;
 	}
 
-protected:
 	virtual bool_ working();
 
 private:

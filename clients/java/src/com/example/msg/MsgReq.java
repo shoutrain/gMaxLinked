@@ -1,4 +1,4 @@
-package gMaxLinked.exmpale.android.msg;
+package com.exmaple.msg;
 
 public interface MsgReq {
 

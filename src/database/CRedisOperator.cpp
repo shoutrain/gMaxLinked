@@ -51,6 +51,20 @@ bool_ CRedisOperator::connect() {
 		return false_v;
 	}
 
+	redisReply *reply = (redisReply *) redisCommand(_context, "AUTH %s",
+			Config::Redis::AUTH);
+
+	if (!_errorHandler(reply, true_v)) {
+		return false_v;
+	}
+
+	reply = (redisReply *) redisCommand(_context, "SELECT %u",
+			Config::Redis::DB);
+
+	if (!_errorHandler(reply, true_v)) {
+		return false_v;
+	}
+
 	return true_v;
 }
 
@@ -61,7 +75,7 @@ none_ CRedisOperator::disconnect() {
 	}
 }
 
-bool_ CRedisOperator::errorHandler(obj_ reply, bool_ freeReply) {
+bool_ CRedisOperator::_errorHandler(obj_ reply, bool_ freeReply) {
 	if (null_v == _context) {
 		return false_v;
 	}
@@ -84,4 +98,28 @@ bool_ CRedisOperator::errorHandler(obj_ reply, bool_ freeReply) {
 	}
 
 	return ret;
+}
+
+ub8_ CRedisOperator::verifyHandshake(const c1_ *sessionId) {
+	assert(sessionId && 0 != sessionId[0]);
+	assert(_context);
+
+	redisReply *reply = (redisReply *) redisCommand(_context,
+			"zscore example:account:session %s", sessionId);
+
+	if (!_errorHandler(reply, false_v)) {
+		return 0;
+	}
+
+	if (REDIS_REPLY_NIL == reply->type) {
+		freeReplyObject(reply);
+
+		return 0;
+	}
+
+	ub8_ id = (ub8_)atoll(reply->str);
+
+	freeReplyObject(reply);
+
+	return id;
 }

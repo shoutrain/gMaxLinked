@@ -44,7 +44,7 @@ const ub2_ MC_ON_OVER = 0x8002;
 ////////////////////////////////////
 const ub1_ ML_CN = 0x01;
 const ub1_ ML_TW = 0x02;
-const ub2_ ML_EN = 0x03;
+const ub1_ ML_EN = 0x03;
 
 ////////////////////////////////////
 // PDUs
@@ -71,7 +71,7 @@ struct TAck {
 struct TPDUHandShake {
 	THeader header;
 	ub4_ build;
-	ub8_ id;
+	c1_ sessionId[Size::SESSION_ID];
 };
 
 struct TPDUHandShakeAck {
@@ -91,6 +91,7 @@ struct TPDUHeartBeatAck {
 struct TPDUOnTimer {
 	THeader header;
 	ub8_ timerId;
+	ub8_ parameter;
 };
 
 struct TPUDOnOver {

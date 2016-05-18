@@ -56,7 +56,7 @@ none_ CWorker::work(IWorkable *workable, bool_ informed, bool_ sync) {
 	}
 }
 
-obj_ CWorker::run(obj_ object) {
+obj_ CWorker::_run(obj_ object) {
 	CWorker *worker = (CWorker *) object;
 
 	_mutexWorker.lock();
@@ -108,7 +108,7 @@ bool_ CWorker::createThread() {
 		return false_v;
 	}
 
-	if (0 != pthread_create(&_handle, &attr, CWorker::run, (obj_ ) this)) {
+	if (0 != pthread_create(&_handle, &attr, CWorker::_run, (obj_ ) this)) {
 		log_fatal("CWorker::createThread: failed to call pthread_create");
 
 		return false_v;

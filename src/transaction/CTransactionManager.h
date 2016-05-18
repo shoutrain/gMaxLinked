@@ -18,7 +18,7 @@ class CTransaction;
 
 #include <map>
 
-typedef std::map<ub8_, CTransaction *> TransactionMap;
+typedef std::map<const c1_ *, CTransaction *> TransactionMap;
 
 class CTransactionManager: public CTimerManager {
 public:
@@ -26,12 +26,12 @@ public:
 
 	none_ work();
 
-	CTransaction *findTransaction(ub8_ id);
+	CTransaction *findTransaction(const c1_ *sessionId);
 	bool_ registerTransaction(CTransaction *transaction);
 	bool_ unregisterTransaction(CTransaction *transaction);
 
 protected:
-	bool_ onTimer(ub8_ timerId, obj_ parameter);
+	bool_ __onTimer(ub8_ timerId, obj_ parameterI, obj_ parameterII);
 
 private:
 	CTransactionManager();

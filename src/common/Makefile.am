@@ -9,8 +9,8 @@ libcommon_a_SOURCES=\
     CBase.h \
     CCond.cpp \
     CCond.h \
-    CIniReader.cpp \
-    CIniReader.h \
+    CConfReader.cpp \
+    CConfReader.h \
     CLock.h \
     CLoopBuffer.cpp \
     CLoopBuffer.h \

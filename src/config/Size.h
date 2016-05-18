@@ -16,12 +16,13 @@
 namespace Size {
 
 const ub4_ NAME = Length::NAME + 1;
+const ub4_ PASSWORD = Length::PASSWORD + 1;
 const ub4_ IP_V4 = Length::IP_V4 + 1;
 const ub4_ URL = Length::URL + 1;
-const ub4_ INI_FILE = Length::INI_FILE + 1;
+const ub4_ PATH = Length::PATH + 1;
 
-// TODO define your lengths here according to Lenght.h
-
+// define your sizes here according to Length.h
+const ub4_ SESSION_ID = Length::SESSION_ID + 1;
 }
 
 #endif // _SIZE_H_

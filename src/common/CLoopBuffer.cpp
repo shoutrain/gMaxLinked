@@ -23,12 +23,12 @@ CLoopBuffer::CLoopBuffer(ub4_ size, CMutex *mutex, bool_ isPadding) :
 	_mutex = mutex;
 	_isPadding = isPadding;
 	_padding = 0;
-	_writePob4_ = _readPob4_ = _buffer = new ub1_[size];
-	assert(_buffer);
+	_writePob4_ = _readPob4_ = __buffer = new ub1_[size];
+	assert(__buffer);
 }
 
 CLoopBuffer::~CLoopBuffer() {
-	delete[] _buffer;
+	delete[] __buffer;
 }
 
 bool_ CLoopBuffer::write(const ub1_ *buffer, ub4_ size) {
@@ -42,8 +42,8 @@ bool_ CLoopBuffer::write(const ub1_ *buffer, ub4_ size) {
 	}
 
 	if (_writePob4_ >= _readPob4_) {
-		ub4_ rightSize = _buffer + _totalSize - _writePob4_;
-		ub4_ leftSize = _readPob4_ - _buffer;
+		ub4_ rightSize = __buffer + _totalSize - _writePob4_;
+		ub4_ leftSize = _readPob4_ - __buffer;
 
 		assert(_padding == 0);
 		assert(_actualSize == _totalSize);
@@ -64,12 +64,12 @@ bool_ CLoopBuffer::write(const ub1_ *buffer, ub4_ size) {
 			_freeSize -= _padding;
 			assert(_freeSize == leftSize);
 
-			memcpy(_buffer, buffer, size);
-			_writePob4_ = _buffer + size;
+			memcpy(__buffer, buffer, size);
+			_writePob4_ = __buffer + size;
 		} else {
 			memcpy(_writePob4_, buffer, rightSize);
-			memcpy(_buffer, buffer + rightSize, size - rightSize);
-			_writePob4_ = _buffer + size - rightSize;
+			memcpy(__buffer, buffer + rightSize, size - rightSize);
+			_writePob4_ = __buffer + size - rightSize;
 		}
 	} else {
 		assert(_readPob4_ - _writePob4_ == (b4_ ) _freeSize);
@@ -107,8 +107,8 @@ ub4_ CLoopBuffer::read(ub1_ *buffer, ub4_ size) {
 	} else {
 		assert(_readPob4_ - _writePob4_ == (b4_ ) _freeSize);
 
-		ub4_ uiRightSize = _buffer + _actualSize - _readPob4_;
-		ub4_ uiLeftSize = _writePob4_ - _buffer;
+		ub4_ uiRightSize = __buffer + _actualSize - _readPob4_;
+		ub4_ uiLeftSize = _writePob4_ - __buffer;
 
 		assert(_actualSize == _totalSize - _padding);
 		assert(uiRightSize + uiLeftSize == _usedSize);
@@ -121,7 +121,7 @@ ub4_ CLoopBuffer::read(ub1_ *buffer, ub4_ size) {
 				_actualSize += _padding;
 				_freeSize += _padding;
 				_padding = 0;
-				_readPob4_ = _buffer;
+				_readPob4_ = __buffer;
 			}
 		} else {
 			if (_usedSize < size) {
@@ -129,8 +129,8 @@ ub4_ CLoopBuffer::read(ub1_ *buffer, ub4_ size) {
 			}
 
 			memcpy(buffer, _readPob4_, uiRightSize);
-			memcpy(buffer + uiRightSize, _buffer, size - uiRightSize);
-			_readPob4_ = _buffer + size - uiRightSize;
+			memcpy(buffer + uiRightSize, __buffer, size - uiRightSize);
+			_readPob4_ = __buffer + size - uiRightSize;
 
 			if (_padding) {
 				_actualSize += _padding;
@@ -153,6 +153,6 @@ none_ CLoopBuffer::reset() {
 	_usedSize = 0;
 	_freeSize = _totalSize;
 	_padding = 0;
-	_writePob4_ = _readPob4_ = _buffer;
+	_writePob4_ = _readPob4_ = __buffer;
 }
 

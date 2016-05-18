@@ -1,4 +1,4 @@
-package gMaxLinked.exmpale.android.tool;
+package com.exmaple.tool;
 
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
@@ -55,8 +55,8 @@ public class NetworkDataHelper {
 		data[1] = buffer.get();
 		data[0] = buffer.get();
 
-		return ((data[0] << 24) & 0xff000000) | ((data[1] << 16) & 0x00ff0000)
-				| ((data[2] << 8) & 0x0000ff00) | (data[3] & 0x000000ff);
+		return ((data[0] << 24) & 0xff000000) | ((data[1] << 16) & 0x00ff0000) | ((data[2] << 8) & 0x0000ff00)
+				| (data[3] & 0x000000ff);
 	}
 
 	public static long getUInt(ByteBuffer buffer) {
@@ -70,9 +70,8 @@ public class NetworkDataHelper {
 		data[1] = buffer.get();
 		data[0] = buffer.get();
 
-		return ((data[0] << 24) & 0xff000000l)
-				| ((data[1] << 16) & 0x00ff0000l)
-				| ((data[2] << 8) & 0x0000ff00l) | (data[3] & 0x000000ffl);
+		return ((data[0] << 24) & 0xff000000l) | ((data[1] << 16) & 0x00ff0000l) | ((data[2] << 8) & 0x0000ff00l)
+				| (data[3] & 0x000000ffl);
 	}
 
 	public static long getLong(ByteBuffer buffer) {
@@ -90,14 +89,10 @@ public class NetworkDataHelper {
 		data[1] = buffer.get();
 		data[0] = buffer.get();
 
-		return ((data[0] << 56) & 0xff00000000000000l)
-				| ((data[1] << 48) & 0x00ff000000000000l)
-				| ((data[2] << 40) & 0x0000ff0000000000l)
-				| ((data[3] << 32) & 0x000000ff00000000l)
-				| ((data[4] << 24) & 0x00000000ff000000l)
-				| ((data[5] << 16) & 0x0000000000ff0000l)
-				| ((data[6] << 8) & 0x000000000000ff00l)
-				| (data[7] & 0x00000000000000ffl);
+		return ((data[0] << 56) & 0xff00000000000000l) | ((data[1] << 48) & 0x00ff000000000000l)
+				| ((data[2] << 40) & 0x0000ff0000000000l) | ((data[3] << 32) & 0x000000ff00000000l)
+				| ((data[4] << 24) & 0x00000000ff000000l) | ((data[5] << 16) & 0x0000000000ff0000l)
+				| ((data[6] << 8) & 0x000000000000ff00l) | (data[7] & 0x00000000000000ffl);
 	}
 
 	public static float getFloat(ByteBuffer buffer) {
@@ -111,8 +106,7 @@ public class NetworkDataHelper {
 		data[1] = buffer.get();
 		data[0] = buffer.get();
 
-		return Float.intBitsToFloat(((data[0] << 24) & 0xff000000)
-				| ((data[1] << 16) & 0x00ff0000)
+		return Float.intBitsToFloat(((data[0] << 24) & 0xff000000) | ((data[1] << 16) & 0x00ff0000)
 				| ((data[2] << 8) & 0x0000ff00) | (data[3] & 0x000000ff));
 
 	}
@@ -132,14 +126,10 @@ public class NetworkDataHelper {
 		data[1] = buffer.get();
 		data[0] = buffer.get();
 
-		return Double.longBitsToDouble(((data[0] << 56) & 0xff00000000000000l)
-				| ((data[1] << 48) & 0x00ff000000000000l)
-				| ((data[2] << 40) & 0x0000ff0000000000l)
-				| ((data[3] << 32) & 0x000000ff00000000l)
-				| ((data[4] << 24) & 0x00000000ff000000l)
-				| ((data[5] << 16) & 0x0000000000ff0000l)
-				| ((data[6] << 8) & 0x000000000000ff00l)
-				| (data[7] & 0x00000000000000ffl));
+		return Double.longBitsToDouble(((data[0] << 56) & 0xff00000000000000l) | ((data[1] << 48) & 0x00ff000000000000l)
+				| ((data[2] << 40) & 0x0000ff0000000000l) | ((data[3] << 32) & 0x000000ff00000000l)
+				| ((data[4] << 24) & 0x00000000ff000000l) | ((data[5] << 16) & 0x0000000000ff0000l)
+				| ((data[6] << 8) & 0x000000000000ff00l) | (data[7] & 0x00000000000000ffl));
 	}
 
 	public static void setSByte(ByteBuffer buffer, byte data) {
@@ -240,8 +230,7 @@ public class NetworkDataHelper {
 		buffer.get(buf.array(), 0, size);
 
 		try {
-			return Charset.defaultCharset().newDecoder().decode(buf).toString()
-					.trim();
+			return Charset.defaultCharset().newDecoder().decode(buf).toString().trim();
 		} catch (Exception e) {
 			e.printStackTrace();
 			assert (false);

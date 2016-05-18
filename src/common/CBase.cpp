@@ -20,7 +20,7 @@ bool_ CBase::initialize() {
 		return false_v;
 	}
 
-	_category = log4c_category_get("CHLog");
+	_category = log4c_category_get("HFRSLog");
 
 	return true_v;
 }

@@ -11,7 +11,7 @@
 #define GLOBAL_CONFIG
 #include "Config.h"
 
-#include "../common/CIniReader.h"
+#include <src/common/CConfReader.h>
 #include "DefaultConfig.h"
 
 #include <string.h>
@@ -20,7 +20,7 @@ namespace Config {
 
 namespace App {
 
-c1_ INI_FILE[Size::INI_FILE];
+c1_ CONF_FILE[Size::PATH];
 ub4_ RUN_AS_DAEMON;
 c1_ NAME[Size::NAME];
 ub4_ BASE_BUILD;
@@ -42,27 +42,29 @@ namespace Redis {
 c1_ HOST[Size::URL];
 ub2_ PORT;
 ub4_ TIMEOUT;
+c1_ AUTH[Size::PASSWORD];
+ub1_ DB;
 
 }
 
-none_ initializeApp(CIniReader *conf);
-none_ initializeRedis(CIniReader *conf);
+none_ initializeApp(CConfReader *conf);
+none_ initializeRedis(CConfReader *conf);
 
 none_ initialize(const c1_ *confFileName) {
 	if (null_v != confFileName && 0 < strlen(confFileName)
-			&& Size::INI_FILE > strlen(confFileName)) {
-		strncpy(App::INI_FILE, confFileName, Size::INI_FILE);
+			&& Size::PATH > strlen(confFileName)) {
+		strncpy(App::CONF_FILE, confFileName, Size::PATH);
 	} else {
-		strncpy(App::INI_FILE, DefaultConfig::App::INI_FILE, Size::INI_FILE);
+		strncpy(App::CONF_FILE, DefaultConfig::App::CONF_FILE, Size::PATH);
 	}
 
-	CIniReader *conf = new CIniReader(App::INI_FILE);
+	CConfReader *conf = new CConfReader(App::CONF_FILE);
 
 	initializeApp(conf);
 	initializeRedis(conf);
 }
 
-none_ initializeApp(CIniReader *conf) {
+none_ initializeApp(CConfReader *conf) {
 	assert(null_v != conf);
 	const c1_ *section = "app";
 
@@ -126,7 +128,7 @@ none_ initializeApp(CIniReader *conf) {
 	}
 }
 
-none_ initializeRedis(CIniReader *conf) {
+none_ initializeRedis(CConfReader *conf) {
 	assert(null_v != conf);
 	const c1_ *section = "redis";
 
@@ -142,6 +144,15 @@ none_ initializeRedis(CIniReader *conf) {
 	if (conf->readInt(section, "timeout", &Redis::TIMEOUT)
 			|| 0 == Redis::TIMEOUT) {
 		Redis::TIMEOUT = DefaultConfig::Redis::TIMEOUT;
+	}
+
+	if (conf->readString(section, "auth", Redis::AUTH, Size::PASSWORD)
+			|| 0 == Redis::AUTH[0]) {
+		strncpy(Redis::AUTH, DefaultConfig::Redis::AUTH, Size::PASSWORD);
+	}
+
+	if (conf->readByte(section, "db", &Redis::DB)) {
+		Redis::DB = DefaultConfig::Redis::DB;
 	}
 }
 

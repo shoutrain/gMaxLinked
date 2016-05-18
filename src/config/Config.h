@@ -21,7 +21,7 @@ namespace Config {
 
 	namespace App {
 
-		GLOBAL_CONFIG c1_ INI_FILE[Size::INI_FILE];
+		GLOBAL_CONFIG c1_ CONF_FILE[Size::PATH];
 		GLOBAL_CONFIG ub4_ RUN_AS_DAEMON;
 		GLOBAL_CONFIG c1_ NAME[Size::NAME];
 		GLOBAL_CONFIG ub4_ BASE_BUILD;
@@ -43,6 +43,8 @@ namespace Config {
 		GLOBAL_CONFIG c1_ HOST[Size::URL];
 		GLOBAL_CONFIG ub2_ PORT;
 		GLOBAL_CONFIG ub4_ TIMEOUT; // Seconds
+		GLOBAL_CONFIG c1_ AUTH[Size::PASSWORD];
+		GLOBAL_CONFIG ub1_ DB;
 
 	}
 

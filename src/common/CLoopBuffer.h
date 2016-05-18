@@ -49,7 +49,7 @@ public:
 	}
 
 protected:
-	ub1_ *_buffer;
+	ub1_ *__buffer;
 
 private:
 	const ub4_ _totalSize;

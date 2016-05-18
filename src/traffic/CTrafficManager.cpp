@@ -80,7 +80,7 @@ none_ CTrafficManager::work() {
 		exit(0);
 	}
 
-	setNonBlocking(_listenFd);
+	_setNonBlocking(_listenFd);
 
 	b4_ optVal = 1;
 
@@ -173,7 +173,7 @@ bool_ CTrafficManager::working() {
 	_mutex.lock();
 
 	while (!_nodeQueue.empty()) {
-		delNode(_nodeQueue.front());
+		_delNode(_nodeQueue.front());
 		_nodeQueue.pop();
 	}
 
@@ -213,7 +213,7 @@ bool_ CTrafficManager::working() {
 		// handle accept socket
 		if (events[i].data.fd == _listenFd) {
 			assert(events[i].events & EPOLLIN);
-			addNodes();
+			_addNodes();
 
 			continue;
 		}
@@ -251,7 +251,7 @@ bool_ CTrafficManager::working() {
 	return _running;
 }
 
-none_ CTrafficManager::addNodes() {
+none_ CTrafficManager::_addNodes() {
 	for (;;) {
 		struct sockaddr_in addr;
 		socklen_t len = sizeof(struct sockaddr_in);
@@ -274,11 +274,11 @@ none_ CTrafficManager::addNodes() {
 		}
 
 		CNode *node = _res.allocate();
-		CNodeGroup *group = allocateGroup();
+		CNodeGroup *group = _allocateGroup();
 
 		group->attach(node, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port),
 				clientFd);
-		setNonBlocking(clientFd);
+		_setNonBlocking(clientFd);
 
 		struct epoll_event ev;
 
@@ -330,7 +330,7 @@ none_ CTrafficManager::addNodes() {
 	}
 }
 
-none_ CTrafficManager::delNode(CNode *node) {
+none_ CTrafficManager::_delNode(CNode *node) {
 	if (FREE == node->getTransaction()->getStatus() || 0 == node->getFd()) {
 		return;
 	}
@@ -386,7 +386,7 @@ none_ CTrafficManager::recycleNode(CNode *node) {
 	_mutex.unlock();
 }
 
-none_ CTrafficManager::setNonBlocking(b4_ socket) {
+none_ CTrafficManager::_setNonBlocking(b4_ socket) {
 	b4_ iOpts = fcntl(socket, F_GETFL);
 
 	if (0 > iOpts) {
@@ -402,7 +402,7 @@ none_ CTrafficManager::setNonBlocking(b4_ socket) {
 	}
 }
 
-CNodeGroup *CTrafficManager::allocateGroup() {
+CNodeGroup *CTrafficManager::_allocateGroup() {
 	if (_curGroupIndex == Config::App::NODE_GROUP_NUM) {
 		_curGroupIndex = 0;
 	}

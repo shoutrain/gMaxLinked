@@ -1,6 +1,4 @@
-#include "connection.h"
-#include "connection_info.h"
-#include "common.h"
+#include "../../clients/c/connection.h"
 
 #include <linux/socket.h>
 #include <unistd.h>
@@ -16,6 +14,8 @@
 #include <string.h>
 #include <assert.h>
 #include <pthread.h>
+#include "../../clients/c/common.h"
+#include "../../clients/c/connection_info.h"
 
 #define EPOLL_EVENT_NUM     32
 #define RECEIVE_BUFFER_SIZE 4096

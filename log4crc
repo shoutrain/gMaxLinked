@@ -18,7 +18,7 @@
     <appender name="syslog" type="syslog" layout="basic"/>
 
     <!-- default layouts ======================================= -->
-    <layout name="basic" type="dated_local"/>
+    <layout name="basic" type="basic"/>
     <layout name="dated_local" type="dated_local"/>
 
     <category name="GMLLog" priority="debug" appender="GMLRollingAppender"/>
