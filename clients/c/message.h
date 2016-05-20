@@ -1,47 +1,88 @@
 #ifndef _message_h_
 #define _message_h_
 
-#include "../../clients/c/size.h"
+#include "size.h"
 
-// pdu with fixed size is easier to develop and has higher performance
-#define MSG_FIXED_LENGTH 128
+////////////////////////////////////
+// type values in THeader
+////////////////////////////////////
+const unsigned short MT_CONTROL = 0x0001;
+const unsigned short MT_ACCOUNT = 0x0002;
+const unsigned short MT_SERVICE = 0x0003;
 
-// MSG_FIXED_LENGTH - sizeof(struct msg_header) - sizeof(struct msg_extra)
-#define MSG_BODY_MAX_LENGTH 112
+const unsigned short MT_SIGN_ACK = 0x0010;
+const unsigned short MT_SIGN_LOG = 0x0020;
+const unsigned short MT_SIGN_FEE = 0x0040;
 
-extern const unsigned short MS_ACK;
+////////////////////////////////////
+// cmd values in THeader
+////////////////////////////////////
+// network messages: 0xXXXX except 0x8XXX
+const unsigned short MC_HAND_SHAKE = 0x0001;
+const unsigned short MC_HEART_BEAT = 0x0002;
 
-extern const unsigned short MC_HANDSHAKE;
-extern const unsigned short MC_REALTIME;
+// internal messages: 0x8XXX
+const unsigned short MC_ON_TIMER = 0x8001;
+const unsigned short MC_ON_OVER = 0x8002;
 
+////////////////////////////////////
+// lang values in THeader
+////////////////////////////////////
+const unsigned char ML_CN = 0x01;
+const unsigned char ML_TW = 0x02;
+const unsigned char ML_EN = 0x03;
+
+////////////////////////////////////
+// PDUs
+////////////////////////////////////
 #pragma pack(1)
 
-struct msg_header {
-	unsigned short length;
-	unsigned short cmd;
+struct THeader {
+    unsigned short size;
+    unsigned short type;
+    unsigned short cmd;
+    unsigned short ver;
+    unsigned char lang;
+    unsigned int seq;
+    unsigned long int stmp;
+    unsigned long int ext;
 };
 
-struct msg_extra {
-	unsigned long long transaction;
-	unsigned int sequence;
+struct TAck {
+    unsigned short code;
 };
 
-struct msg {
-	struct msg_header header;
-	struct msg_extra extra;
-	unsigned char body[MSG_BODY_MAX_LENGTH];
+struct TPDUHandShake {
+    struct THeader header;
+    unsigned int build;
+    char sessionId[SIZE_SESSION_ID];
 };
 
-struct mb_ack {
-	int result;
+struct TPDUHandShakeAck {
+    struct THeader header;
+    struct TAck ack;
 };
 
-struct mb_handshake {
-	char version[VERSION_SIZE];
-	unsigned int build;
+struct TPDUHeartBeat {
+    struct THeader header;
+};
+
+struct TPDUHeartBeatAck {
+    struct THeader header;
+    struct TAck ack;
+};
+
+struct TPDUOnTimer {
+    struct THeader header;
+    unsigned long int timerId;
+    unsigned long int parameter;
+};
+
+struct TPUDOnOver {
+    struct THeader header;
+    int reason;
 };
 
 #pragma pack()
-// ----------------Share with CollectHandler ends----------------//
 
 #endif // _message_h_

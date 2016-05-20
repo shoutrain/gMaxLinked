@@ -1,4 +1,4 @@
-#include "../../clients/c/common.h"
+#include "common.h"
 
 #include <stddef.h>
 #include <sys/time.h>

@@ -1,10 +1,8 @@
-#include "../../clients/c/connection.h"
+#include "connection.h"
 
-#include <linux/socket.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/epoll.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -14,11 +12,9 @@
 #include <string.h>
 #include <assert.h>
 #include <pthread.h>
-#include "../../clients/c/common.h"
-#include "../../clients/c/connection_info.h"
 
-#define EPOLL_EVENT_NUM     32
-#define RECEIVE_BUFFER_SIZE 4096
+#include "common.h"
+#include "connection_info.h"
 
 static pthread_mutex_t _lock = PTHREAD_MUTEX_INITIALIZER;
 static unsigned int _connection_num;
@@ -27,280 +23,283 @@ static unsigned int _connection_num;
 #define __unlock pthread_mutex_unlock(&_lock)
 
 static void _set_socket_nonblocking(int socket) {
-	int opts = fcntl(socket, F_GETFL);
-	int opt = 1;
+    int opts = fcntl(socket, F_GETFL);
+    int opt = 1;
 
-	if (0 > opts) {
-		log_fatal("failed to call fcntl with F_GETFL");
-		exit(1);
-	}
+    if (0 > opts) {
+        printf("failed to call fcntl with F_GETFL\n");
+        exit(1);
+    }
 
-	opts |= O_NONBLOCK;
+    opts |= O_NONBLOCK;
 
-	if (0 > fcntl(socket, F_SETFL, opts)) {
-		log_fatal("failed to call fctntl with F_SETFL");
-		exit(1);
-	}
+    if (0 > fcntl(socket, F_SETFL, opts)) {
+        printf("failed to call fcntl with F_SETFL\n");
+        exit(1);
+    }
 
-	setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 }
 
 static void _init_socket(struct connection_info *ci) {
-	ci->socket = socket(PF_INET, SOCK_STREAM, 0);
+    ci->socket = socket(PF_INET, SOCK_STREAM, 0);
 
-	if (-1 == ci->socket) {
-		log_fatal("failed to create socket");
-		exit(1);
-	}
+    if (-1 == ci->socket) {
+        printf("failed to create client socket\n");
+        exit(1);
+    }
 
-	_set_socket_nonblocking(ci->socket);
+    _set_socket_nonblocking(ci->socket);
 
-	struct sockaddr_in client_addr;
-	bzero(&client_addr, sizeof(client_addr));
-	client_addr.sin_family = AF_INET;
-	client_addr.sin_addr.s_addr = htons(INADDR_ANY);
-	client_addr.sin_port = htons(0);
+    struct sockaddr_in client_addr;
+    bzero(&client_addr, sizeof(struct sockaddr_in));
+    client_addr.sin_len = sizeof(struct sockaddr_in);
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_addr.s_addr = htons(INADDR_ANY);
+    client_addr.sin_port = htons(0);
 
-	if (bind(ci->socket, (struct sockaddr *) &client_addr,
-			sizeof(client_addr))) {
-		log_fatal("failed to bind socket");
-		exit(1);
-	}
-
-	ci->epoll_container = epoll_create(EPOLL_EVENT_NUM);
-
-	if (-1 == ci->epoll_container) {
-		log_fatal("failed to call epoll_create");
-		exit(1);
-	}
-
-	struct epoll_event ev;
-
-	ev.events = EPOLLRDHUP | EPOLLOUT | EPOLLIN | EPOLLET;
-	ev.data.fd = ci->socket;
-
-	if (-1 == epoll_ctl(ci->epoll_container, EPOLL_CTL_ADD, ci->socket, &ev)) {
-		log_fatal("failed to call epoll_ctl with EPOLL_CTL_ADD");
-		exit(1);
-	}
+    if (bind(ci->socket, (struct sockaddr *) &client_addr,
+            sizeof(struct sockaddr_in))) {
+        printf("failed to bind socket\n");
+        exit(1);
+    }
 }
 
 static void _fini_socket(struct connection_info *ci) {
-	epoll_ctl(ci->epoll_container, EPOLL_CTL_DEL, ci->socket, 0);
-	close(ci->socket);
-	close(ci->epoll_container);
+    close(ci->socket);
 }
 
 static void *_working(void *arg) {
-	pthread_detach(pthread_self());
+    __lock;
+    _connection_num++;
+    __unlock;
 
-	__lock;
-	_connection_num++;
-	__unlock;
+    struct connection_info *ci = (struct connection_info *) arg;
+    ci->is_connected = 0;
 
-	struct connection_info *ci = (struct connection_info *) arg;
-	ci->is_connected = 0;
+    struct sockaddr_in server_addr;
+    bzero(&server_addr, sizeof(struct sockaddr_in));
+    server_addr.sin_len = sizeof(struct sockaddr_in);
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(ci->port);
 
-	struct sockaddr_in server_addr;
-	bzero(&server_addr, sizeof(server_addr));
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(ci->port);
+    if (0 == inet_aton(ci->ip, &server_addr.sin_addr)) {
+        printf("failed to initialize socket ip\n");
+        exit(1);
+    }
 
-	if (0 == inet_aton(ci->ip, &server_addr.sin_addr)) {
-		log_fatal("failed to initialize socket ip");
-		exit(1);
-	}
+    while (ci->is_running) {
+        int ret = connect(ci->socket, (struct sockaddr *) &server_addr,
+                sizeof(struct sockaddr_in));
 
-	while (ci->is_running) {
-		int ret = connect(ci->socket, (struct sockaddr *) &server_addr,
-				sizeof(server_addr));
+        if (0 == ret) {
+            ci->callback_funs.on_connected(ci->parameter);
+            ci->is_connected = 1;
+        } else if (0 > ret && EINPROGRESS != errno) {
+            printf("failed to connect to destination\n");
+            _fini_socket(ci);
+            goo_sleep(ci->reconnect_interval, 0);
+            _init_socket(ci);
 
-		if (0 == ret) {
-			ci->callback_funs.on_connected(ci->id);
-			ci->is_connected = 1;
-		} else if (0 > ret && EINPROGRESS != errno) {
-			log_info("failed to connect to destination");
-			goo_sleep(ci->reconnect_interval, 0);
-			_fini_socket(ci);
-			_init_socket(ci);
+            continue;
+        }
 
-			continue;
-		}
+        ci->needs_reconnect = 0;
+        fd_set fd_read_set;
+        fd_set fd_write_set;
+        fd_set fd_error_set;
+        struct timeval tv;
+        tv.tv_sec = ci->reconnect_interval;
+        tv.tv_usec = 0;
 
-		ci->needs_reconnect = 0;
-		struct epoll_event events[EPOLL_EVENT_NUM];
-		int ret_fds = 0;
+        while (ci->is_running && !ci->needs_reconnect) {
+            FD_ZERO(&fd_read_set);
+            FD_ZERO(&fd_write_set);
+            FD_ZERO(&fd_error_set);
+            FD_SET(ci->socket, &fd_read_set);
+            FD_SET(ci->socket, &fd_write_set);
+            FD_SET(ci->socket, &fd_error_set);
 
-		while (ci->is_running && !ci->needs_reconnect) {
-			ret_fds = epoll_wait(ci->epoll_container, events, EPOLL_EVENT_NUM,
-					ci->reconnect_interval);
+            int ret = select(ci->socket + 1, &fd_read_set, &fd_write_set,
+                    &fd_error_set, &tv);
 
-			if (-1 == ret_fds) {
-				switch (errno) {
-				case EBADF:
-					log_fatal("failed to call epoll_wait - EBADF");
-					exit(1);
-				case EFAULT:
-					log_fatal("failed to call epoll_wait - EFAULT");
-					exit(1);
-				case EINTR:
-					continue;
-				case EINVAL:
-					log_fatal("failed to call epoll_wait - EINVAL");
-					exit(1);
-				default:
-					log_fatal("failed to call epoll_wait - Unknown");
-					exit(1);
-				}
-			}
+            if (0 > ret) {
+                ci->is_connected = 0;
+                ci->needs_reconnect = 1;
+                ci->callback_funs.on_closed(ci->parameter);
+                _fini_socket(ci);
+                goo_sleep(ci->reconnect_interval, 0);
+                _init_socket(ci);
 
-			int i = 0;
+                break;
+            } else if (0 == ret) {
+                continue;
+            }
 
-			for (; i < ret_fds; i++) {
-				if ((events[i].events & EPOLLERR) && EINPROGRESS != errno) {
-					ci->is_connected = 0;
-					ci->needs_reconnect = 1;
-					ci->callback_funs.on_error(ci->id, errno, strerror(errno));
-					goo_sleep(ci->reconnect_interval, 0);
-					_fini_socket(ci);
-					_init_socket(ci);
-					break;
-				}
 
-				if (events[i].events & EPOLLRDHUP) {
-					ci->is_connected = 0;
-					ci->needs_reconnect = 1;
-					ci->callback_funs.on_closed(ci->id);
-					goo_sleep(ci->reconnect_interval, 0);
-					_fini_socket(ci);
-					_init_socket(ci);
-					break;
-				}
+            if (FD_ISSET(ci->socket, &fd_error_set)) {
+                ci->is_connected = 0;
+                ci->needs_reconnect = 1;
+                ci->callback_funs.on_error(&ci, 1, "found error on the socket "
+                        "after select\n");
+                _fini_socket(ci);
+                goo_sleep(ci->reconnect_interval, 0);
+                _init_socket(ci);
 
-				if (events[i].events & EPOLLOUT) {
-					if (!ci->is_connected) {
-						ci->is_connected = 1;
-						ci->callback_funs.on_connected(ci->id);
-						continue;
-					}
-				}
+                break;
+            }
 
-				if (events[i].events & EPOLLIN) {
-					unsigned char buffer[RECEIVE_BUFFER_SIZE];
-					int offset = 0;
+            if (FD_ISSET(ci->socket, &fd_write_set)) {
+                if (0 == ci->is_connected) {
+                    int status;
+                    socklen_t slen = sizeof(int);
 
-					for (;;) {
-						unsigned char tmp_buf[512];
-						int len = recv(events[i].data.fd, tmp_buf, 512, 0);
+                    getsockopt(ci->socket, SOL_SOCKET, SO_ERROR,
+                            (void *) &status, &slen);
 
-						if (0 < len) { // read data from socket buffer
-							if (len + offset > RECEIVE_BUFFER_SIZE) {
-								log_fatal("the socket receiving buffer is too "
-										"small");
-								exit(1);
-							}
+                    if (0 == status) {
+                        ci->is_connected = 1;
+                        ci->callback_funs.on_connected(&ci);
+                    } else {
+                        break;
+                    }
+                }
+            }
 
-							memcpy(buffer + offset, tmp_buf, len);
-							offset += len;
-						} else if (0 > len) {
-							if (EAGAIN == errno || EWOULDBLOCK == errno) {
-								// socket read buffer is empty
-								if (0 < offset) {
-									buffer[offset] = 0;
-									ci->callback_funs.on_received(ci->id,
-											buffer, offset);
-									offset = 0;
-								}
-							} else {
-								// error happened
-							}
+            if (FD_ISSET(ci->socket, &fd_read_set)) {
+                unsigned char buffer[RECEIVE_BUFFER_SIZE];
+                int offset = 0;
 
-							break;
-						} else {
-							// the socket has been closed
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
+                for (; ;) {
+                    unsigned char tmp_buf[MSG_MAX_LENGTH];
+                    ssize_t len = recv(ci->socket, tmp_buf, MSG_MAX_LENGTH, 0);
 
-	ci->is_connected = 0;
-	ci->callback_funs.on_closed(ci->id);
-	_fini_socket(ci);
+                    if (0 < len) { // read data from socket buffer
+                        if (len + offset > RECEIVE_BUFFER_SIZE) {
+                            printf("the socket receiving buffer is too small\n");
+                            exit(1);
+                        }
 
-	__lock;
-	_connection_num--;
-	__unlock;
+                        memcpy(buffer + offset, tmp_buf, len);
+                        offset += len;
+                    } else if (0 > len) {
+                        if (EAGAIN == errno || EWOULDBLOCK == errno) {
+                            // socket read buffer is empty
+                            if (0 < offset) {
+                                buffer[offset] = 0;
+                                ci->callback_funs.on_received(ci->parameter,
+                                        buffer, offset);
+                            }
+                        } else {
+                            // error happened
+                            // the socket has been closed
+                            ci->is_connected = 0;
+                            ci->needs_reconnect = 1;
+                            ci->callback_funs.on_closed(ci->parameter);
+                            _fini_socket(ci);
+                            goo_sleep(ci->reconnect_interval, 0);
+                            _init_socket(ci);
+                        }
 
-	ci->tid = 0;
+                        break;
+                    } else {
+                        // the socket has been closed
+                        ci->is_connected = 0;
+                        ci->needs_reconnect = 1;
+                        ci->callback_funs.on_closed(ci->parameter);
+                        _fini_socket(ci);
+                        goo_sleep(ci->reconnect_interval, 0);
+                        _init_socket(ci);
 
-	return NULL;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    ci->is_connected = 0;
+    ci->callback_funs.on_closed(ci->parameter);
+    _fini_socket(ci);
+
+    __lock;
+    _connection_num--;
+    __unlock;
+
+    ci->tid = 0;
+
+    return NULL;
 }
 
 int cnn_start(struct connection_info *ci, bool join) {
-	_init_socket(ci);
+    _init_socket(ci);
 
-	ci->is_running = 1;
+    ci->is_running = 1;
 
-	if (0 != pthread_create(&ci->tid, NULL, _working, ci)) {
-		log_fatal("failed to create thread");
+    if (0 != pthread_create(&ci->tid, NULL, _working, ci)) {
+        printf("failed to create thread\n");
 
-		return 1;
-	}
+        return 1;
+    }
 
-	if (join) {
-		if (pthread_join(ci->tid, NULL)) {
-			log_fatal("failed to wait the thread");
+    if (join) {
+        if (pthread_join(ci->tid, NULL)) {
+            printf("failed to wait the thread\n");
 
-			return 2;
-		}
-	}
+            return 2;
+        }
+    } else {
+        pthread_detach(&ci->tid);
+    };
 
-	return 0;
+    return 0;
 }
 
 void cnn_stop(struct connection_info *ci, bool sync) {
-	ci->is_running = 0;
+    ci->is_running = 0;
 
-	if (sync) {
-		while (ci->tid) {
-			goo_sleep(0, 100);
-		}
-	}
+    if (sync) {
+        while (ci->tid) {
+            goo_sleep(0, 100);
+        }
+    }
 }
 
 int cnn_send(struct connection_info *ci, const unsigned char *buffer,
-		unsigned int size) {
-	assert(NULL != buffer);
-	assert(0 < size);
+        unsigned int size) {
+    assert(NULL != buffer);
+    assert(0 < size);
 
-	if (ci->is_connected) {
-		ssize_t n = 0;
-		unsigned int offset = 0;
+    if (ci->is_connected) {
+        ssize_t n = 0;
+        unsigned int offset = 0;
 
-		do {
-			n = write(ci->socket, buffer + offset, size - offset);
+        do {
+            n = write(ci->socket, buffer + offset, size - offset);
 
-			if (-1 == n) {
-				if (EAGAIN == errno || EWOULDBLOCK == errno) {
-					goo_sleep(0, 10);
-					continue;
-				} else {
-					return -2;
-				}
-			}
+            if (-1 == n) {
+                if (EAGAIN == errno || EWOULDBLOCK == errno) {
+                    goo_sleep(0, 10);
+                    continue;
+                } else {
+                    return -2;
+                }
+            } else if (0 == n) {
+                // the socket has been closed
+                return -2;
+            }
 
-			offset += n;
-		} while (size > offset);
+            offset += n;
+        } while (size > offset);
 
-		return 0;
-	}
+        printf("sent %d bytes to server\n", size);
 
-	return -1;
+        return 0;
+    }
+
+    return -1;
 }
 
 unsigned int cnn_get_connection_num() {
-	return _connection_num;
+    return _connection_num;
 }
