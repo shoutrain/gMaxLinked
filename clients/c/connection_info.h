@@ -37,6 +37,10 @@ struct connection_info {
     int is_running;
     int is_connected;
     int needs_reconnect;
+
+    unsigned char msg_buf[MSG_MAX_LENGTH];
+    unsigned int offset;
+    unsigned int pending_size;
 };
 
 #endif // _connection_info_h_

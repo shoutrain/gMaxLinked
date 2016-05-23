@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include "connection_info.h"
+#include "message.h"
 
 static pthread_mutex_t _lock = PTHREAD_MUTEX_INITIALIZER;
 static unsigned int _connection_num;
@@ -167,30 +168,36 @@ static void *_working(void *arg) {
             }
 
             if (FD_ISSET(ci->socket, &fd_read_set)) {
-                unsigned char buffer[RECEIVE_BUFFER_SIZE];
-                int offset = 0;
-
                 for (; ;) {
-                    unsigned char tmp_buf[MSG_MAX_LENGTH];
-                    ssize_t len = recv(ci->socket, tmp_buf, MSG_MAX_LENGTH, 0);
+                    if (0 == ci->pending_size) {
+                        ci->pending_size = sizeof(struct THeader);
+                    }
+
+                    ssize_t len = recv(ci->socket, ci->msg_buf + ci->offset,
+                            ci->pending_size - ci->offset, 0);
 
                     if (0 < len) { // read data from socket buffer
-                        if (len + offset > RECEIVE_BUFFER_SIZE) {
-                            printf("the socket receiving buffer is too small\n");
-                            exit(1);
-                        }
+                        ci->offset += len;
 
-                        memcpy(buffer + offset, tmp_buf, len);
-                        offset += len;
-                    } else if (0 > len) {
-                        if (EAGAIN == errno || EWOULDBLOCK == errno) {
-                            // socket read buffer is empty
-                            if (0 < offset) {
-                                buffer[offset] = 0;
+                        if (sizeof(struct THeader) == ci->offset) {
+                            struct THeader *header = (struct THeader *)ci->msg_buf;
+
+                            if (sizeof(struct THeader) == header->size) {
                                 ci->callback_funs.on_received(ci->parameter,
-                                        buffer, offset);
+                                        ci->msg_buf, ci->offset);
+                                ci->offset = 0;
+                                ci->pending_size = 0;
+                            } else {
+                                ci->pending_size = header->size;
                             }
-                        } else {
+                        } else if (ci->pending_size == ci->offset){
+                            ci->callback_funs.on_received(ci->parameter,
+                                    ci->msg_buf, ci->offset);
+                            ci->offset = 0;
+                            ci->pending_size = 0;
+                        }
+                    } else if (0 > len) {
+                        if (EAGAIN != errno || EWOULDBLOCK != errno) {
                             // error happened
                             // the socket has been closed
                             ci->is_connected = 0;
@@ -249,7 +256,7 @@ int cnn_start(struct connection_info *ci, bool join) {
             return 2;
         }
     } else {
-        pthread_detach(&ci->tid);
+        pthread_detach(ci->tid);
     };
 
     return 0;

@@ -45,8 +45,6 @@ void on_received(void *parameter, const unsigned char *data,
         unsigned int size) {
     printf("on_received: %d bytes\n", size);
 
-    // TODO no network package checking here
-
     struct THeader *header = (struct THeader *) data;
 
     if ((MT_CONTROL | MT_SIGN_ACK) == header->type
