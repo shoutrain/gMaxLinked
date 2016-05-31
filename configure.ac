@@ -13,11 +13,11 @@ AC_PROG_CXX
 # Checks for libraries.
 AC_PROG_RANLIB
 # FIXME: Replace `main' with a function in `-lhiredis':
-AC_CHECK_LIB([hiredis], [main])
+AC_CHECK_LIB([hiredis], [redisConnectWithTimeout])
 # FIXME: Replace `main' with a function in `-llog4c':
-AC_CHECK_LIB([log4c], [main])
+AC_CHECK_LIB([log4c], [log4c_init])
 # FIXME: Replace `main' with a function in `-lpthread':
-AC_CHECK_LIB([pthread], [main])
+AC_CHECK_LIB([pthread], [pthread_create])
 
 # Checks for header files.
 AC_HEADER_STDC
