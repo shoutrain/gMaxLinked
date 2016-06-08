@@ -78,13 +78,13 @@ bool_ CNode::recv() {
 			_recvOffset += n;
 
 			if (sizeof(Message::THeader) == _recvOffset) {
-				_recvDueSize = (ub2_) *_recvBuffer;
+				_recvDueSize = *(ub2_ *) _recvBuffer;
 
 				// maybe the whole PDU is just a header
 				if (sizeof(Message::THeader) == _recvDueSize) {
 					Message::TMsg *msg = (Message::TMsg *) _recvBuffer;
 
-					msg->ext = (ub8_)&_transaction;
+					msg->ext = (ub8_) &_transaction;
 					_group->putMessage(msg);
 					_recvOffset = 0;
 					_recvDueSize = 0;
@@ -116,7 +116,7 @@ bool_ CNode::recv() {
 			if (_recvDueSize == _recvOffset) {
 				Message::TMsg *msg = (Message::TMsg*) _recvBuffer;
 
-				msg->ext = (ub8_)&_transaction;
+				msg->ext = (ub8_) &_transaction;
 				_group->putMessage(msg);
 				_recvOffset = 0;
 				_recvDueSize = 0;

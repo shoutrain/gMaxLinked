@@ -76,7 +76,7 @@ bool_ CNodeGroup::working() {
 	ub4_ n = _queue.read(_buffer, sizeof(ub2_));
 	assert(sizeof(ub2_) == n);
 
-	ub2_ size = (ub2_) *_buffer;
+	ub2_ size = *(ub2_ *) _buffer;
 
 	n = _queue.read(_buffer + sizeof(ub2_), size - sizeof(ub2_));
 	assert(size == n + sizeof(ub2_));
