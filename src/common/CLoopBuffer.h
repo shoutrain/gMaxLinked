@@ -60,8 +60,8 @@ private:
 	bool_ _isPadding;
 	ub4_ _padding; // = _totalSize - _actualSize
 
-	ub1_ *_writePob4_;
-	ub1_ *_readPob4_;
+	ub1_ *_writePos;
+	ub1_ *_readPos;
 
 	CMutex *_mutex;
 };
