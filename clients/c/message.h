@@ -13,6 +13,7 @@
 #define MT_SIGN_ACK 0x0010
 #define MT_SIGN_LOG 0x0020
 #define MT_SIGN_FEE 0x0040
+#define MT_SIGN_GRP 0x0080
 
 ////////////////////////////////////
 // cmd values in THeader
@@ -21,9 +22,8 @@
 #define MC_HAND_SHAKE 0x0001
 #define MC_HEART_BEAT 0x0002
 
-// internal messages: 0x8XXX
-#define MC_ON_TIMER 0x8001
-#define MC_ON_OVER 0x8002
+#define MC_SEND_MSG 0x0003
+#define MC_PUSH_MSG 0x0004
 
 ////////////////////////////////////
 // lang values in THeader
@@ -44,8 +44,8 @@ struct THeader {
     unsigned short ver;
     unsigned char lang;
     unsigned int seq;
-    unsigned long int stmp;
-    unsigned long int ext;
+    unsigned long long stmp;
+    unsigned long long ext;
 };
 
 struct TAck {
@@ -55,6 +55,7 @@ struct TAck {
 struct TPDUHandShake {
     struct THeader header;
     unsigned int build;
+    unsigned long long lastUpdate;
     char sessionId[SIZE_SESSION_ID];
 };
 
@@ -72,15 +73,31 @@ struct TPDUHeartBeatAck {
     struct TAck ack;
 };
 
-struct TPDUOnTimer {
+struct TPDUSendMsg {
     struct THeader header;
-    unsigned long int timerId;
-    unsigned long int parameter;
+    unsigned char dstType; // 1 - user, 2 - group
+    unsigned long long dstId;
+    char json[SIZE_JSON];
 };
 
-struct TPUDOnOver {
+struct TPDUSendMsgAck {
     struct THeader header;
-    int reason;
+    struct TAck ack;
+    unsigned long long messageId;
+};
+
+struct TPDUPushMsg {
+    struct THeader header;
+    unsigned char ornType; // 1 - user, 2- group
+    unsigned long long ornId;
+    unsigned long long ornExtId;
+    unsigned long long messageId;
+    char json[SIZE_JSON];
+};
+
+struct TPDUPushMsgAck {
+    struct THeader header;
+    struct TAck ack;
 };
 
 #pragma pack()
