@@ -16,12 +16,17 @@
 
 #include <hiredis/hiredis.h>
 
+class CTransaction;
+
 class CRedisOperator: public CBase {
 public:
 	CRedisOperator();
 	virtual ~CRedisOperator();
 
 	ub8_ verifyHandshake(const c1_ *sessionId);
+	bool_ sendMessage(const CTransaction *transaction,
+			const Message::TPDUSendMsg *msg, ub8_ &messageId);
+	bool_ checkMessages(CTransaction *transaction);
 
 	bool_ connect();
 	none_ disconnect();

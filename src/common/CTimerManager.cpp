@@ -62,6 +62,10 @@ ub8_ CTimerManager::setTimer(ub4_ period, obj_ parameterI, obj_ parameterII,
 
 none_ CTimerManager::killTimer(ub8_ timerId) {
 	assert(timerId > 0);
+	if (0 == timerId) {
+		return;
+	}
+
 	TTimer *timer = (TTimer *) timerId;
 	assert(NOTHING != timer->status);
 	CAutoLock al(&_mutex);

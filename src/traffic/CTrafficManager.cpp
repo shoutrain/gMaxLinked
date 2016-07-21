@@ -114,7 +114,7 @@ none_ CTrafficManager::work() {
 		exit(0);
 	}
 
-	// register listening fd b4_o epoll.
+	// register listening fd into epoll.
 	struct epoll_event ev;
 
 	ev.events = EPOLLIN | EPOLLET;
@@ -224,7 +224,7 @@ bool_ CTrafficManager::working() {
 		if (events[i].events & EPOLLRDHUP) {
 			log_debug("[%p %s:%u]CTrafficManager::working: node broken",
 					node->getTransaction(), node->getIp(), node->getPort());
-			node->getTransaction()->over(CONNECTION_BROKEN);
+			node->getTransaction()->over(CONNECTION_BROKEN, true_v);
 
 			continue;
 		}
@@ -232,7 +232,7 @@ bool_ CTrafficManager::working() {
 		if (events[i].events & EPOLLERR) {
 			log_debug("[%p %s:%u]CTrafficManager::working: error happens",
 					node->getTransaction(), node->getIp(), node->getPort());
-			node->getTransaction()->over(CONNECTION_ERROR);
+			node->getTransaction()->over(CONNECTION_ERROR, true_v);
 
 			continue;
 		}
@@ -243,7 +243,7 @@ bool_ CTrafficManager::working() {
 				log_debug("[%p %s:%u]CTrafficManager::working: "
 						"failed to receive data", node->getTransaction(),
 						node->getIp(), node->getPort());
-				node->getTransaction()->over(CANNOT_RECV_DATA);
+				node->getTransaction()->over(CANNOT_RECV_DATA, true_v);
 			}
 		}
 	}
@@ -275,9 +275,17 @@ none_ CTrafficManager::_addNodes() {
 
 		CNode *node = _res.allocate();
 		CNodeGroup *group = _allocateGroup();
+		b4_ optVal = 1;
 
-		group->attach(node, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port),
-				clientFd);
+		if (false_v
+				== group->attach(node, inet_ntoa(addr.sin_addr),
+						ntohs(addr.sin_port), clientFd)) {
+			log_crit("CTrafficManager::addNode: no enough resource to support");
+			close(clientFd);
+
+			return;
+		}
+
 		_setNonBlocking(clientFd);
 
 		struct epoll_event ev;

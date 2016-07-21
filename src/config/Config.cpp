@@ -24,6 +24,7 @@ c1_ CONF_FILE[Size::PATH];
 ub4_ RUN_AS_DAEMON;
 c1_ NAME[Size::NAME];
 ub4_ BASE_BUILD;
+ub2_ PROTOCOL_VERSION;
 c1_ LISTEN_IP[Size::IP_V4];
 ub2_ LISTEN_PORT;
 ub4_ EPOLL_WAIT_EVENT_NUM;
@@ -34,6 +35,13 @@ ub4_ TOTAL_THREAD_NUM;
 ub4_ MESSAGE_MAX_NUM_IN_QUEUE;
 ub4_ THREAD_STACK_SIZE;
 ub4_ HEARTBEAT_INTERVAL;
+
+}
+
+namespace Msg {
+
+ub8_ VALID_DURATION;
+ub1_ VALID_NUMBER;
 
 }
 
@@ -48,6 +56,7 @@ ub1_ DB;
 }
 
 none_ initializeApp(CConfReader *conf);
+none_ initializeMsg(CConfReader *conf);
 none_ initializeRedis(CConfReader *conf);
 
 none_ initialize(const c1_ *confFileName) {
@@ -61,6 +70,7 @@ none_ initialize(const c1_ *confFileName) {
 	CConfReader *conf = new CConfReader(App::CONF_FILE);
 
 	initializeApp(conf);
+	initializeMsg(conf);
 	initializeRedis(conf);
 }
 
@@ -81,6 +91,11 @@ none_ initializeApp(CConfReader *conf) {
 	if (conf->readInt(section, "base_build", &App::BASE_BUILD)
 			|| 0 == App::BASE_BUILD) {
 		App::BASE_BUILD = DefaultConfig::App::BASE_BUILD;
+	}
+
+	if (conf->readShort(section, "protocol_version", &App::PROTOCOL_VERSION)
+			|| 0 == App::PROTOCOL_VERSION) {
+		App::PROTOCOL_VERSION = DefaultConfig::App::PROTOCOL_VERSION;
 	}
 
 	if (conf->readString(section, "listen_ip", App::LISTEN_IP, Size::IP_V4)
@@ -109,12 +124,12 @@ none_ initializeApp(CConfReader *conf) {
 	}
 
 	App::TOTAL_SUPPORT_USER_NUM = App::NODE_GROUP_NUM * App::NODE_GROUP_SIZE;
-	App::TOTAL_THREAD_NUM = App::NODE_GROUP_NUM + 3;
+	App::TOTAL_THREAD_NUM = App::NODE_GROUP_NUM + 4;
 
 	if (conf->readInt(section, "message_max_num_in_queue",
 			&App::MESSAGE_MAX_NUM_IN_QUEUE)
 			|| 0 == App::MESSAGE_MAX_NUM_IN_QUEUE) {
-		App::MESSAGE_MAX_NUM_IN_QUEUE = App::NODE_GROUP_SIZE;
+		App::MESSAGE_MAX_NUM_IN_QUEUE = App::NODE_GROUP_SIZE * 8;
 	}
 
 	if (conf->readInt(section, "thread_stack_size", &App::THREAD_STACK_SIZE)
@@ -125,6 +140,26 @@ none_ initializeApp(CConfReader *conf) {
 	if (conf->readInt(section, "heartbeat_interval", &App::HEARTBEAT_INTERVAL)
 			|| 0 == App::HEARTBEAT_INTERVAL) {
 		App::HEARTBEAT_INTERVAL = DefaultConfig::App::HEARTBEAT_INTERVAL;
+	}
+}
+
+none_ initializeMsg(CConfReader *conf) {
+	assert(null_v != conf);
+	const c1_ *section = "msg";
+
+	ub4_ validDuration;
+
+	if (conf->readInt(section, "valid_duration", &validDuration)
+			|| 0 == validDuration) {
+		Msg::VALID_DURATION = DefaultConfig::Msg::VALID_DURATION * 60 * 60
+				* 1000000;
+	} else {
+		Msg::VALID_DURATION = validDuration * 60 * 60 * 1000000;
+	}
+
+	if (conf->readByte(section, "valid_number", &Msg::VALID_NUMBER)
+			|| 0 == Msg::VALID_NUMBER) {
+		Msg::VALID_NUMBER = DefaultConfig::Msg::VALID_NUMBER;
 	}
 }
 

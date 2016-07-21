@@ -30,14 +30,15 @@ CNode::CNode() :
 CNode::~CNode() {
 }
 
-none_ CNode::onAttach(CNodeGroup *group, const c1_ *ip, ub2_ port, b4_ fd) {
+bool_ CNode::onAttach(CNodeGroup *group, const c1_ *ip, ub2_ port, b4_ fd) {
 	_group = group;
 	_recvOffset = 0;
 	_recvDueSize = 0;
 	strncpy(_ip, ip, Length::IP_V4);
 	_port = port;
 	_fd = fd;
-	_transaction.onAttach();
+
+	return _transaction.onAttach();
 }
 
 none_ CNode::onDetach() {
@@ -85,7 +86,14 @@ bool_ CNode::recv() {
 					Message::TMsg *msg = (Message::TMsg *) _recvBuffer;
 
 					msg->ext = (ub8_) &_transaction;
-					_group->putMessage(msg);
+
+					if (false_v == _group->putMessage(msg)) {
+						log_crit("[%p %s:%u]CNode::recv: no more queue space",
+								&_transaction, _ip, _port);
+
+						return false_v;
+					}
+
 					_recvOffset = 0;
 					_recvDueSize = 0;
 				}
@@ -117,7 +125,14 @@ bool_ CNode::recv() {
 				Message::TMsg *msg = (Message::TMsg*) _recvBuffer;
 
 				msg->ext = (ub8_) &_transaction;
-				_group->putMessage(msg);
+
+				if (false_v == _group->putMessage(msg)) {
+					log_crit("[%p %s:%u]CNode::recv: no more queue space",
+							&_transaction, _ip, _port);
+
+					return false_v;
+				}
+
 				_recvOffset = 0;
 				_recvDueSize = 0;
 			}

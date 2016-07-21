@@ -21,7 +21,7 @@ public:
 	virtual ~CNode();
 
 	// called by CTrafficManager thread when CNodeGroup attaches the node
-	none_ onAttach(CNodeGroup *node, const c1_ *ip, ub2_ port, b4_ fd);
+	bool_ onAttach(CNodeGroup *node, const c1_ *ip, ub2_ port, b4_ fd);
 
 	// called by CTrafficManager thread when CNodeGroup detaches the node
 	none_ onDetach();

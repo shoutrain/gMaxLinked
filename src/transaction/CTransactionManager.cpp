@@ -27,7 +27,7 @@ CTransactionManager *CTransactionManager::instance() {
 }
 
 CTransactionManager::CTransactionManager() :
-		CTimerManager(Config::App::TOTAL_SUPPORT_USER_NUM * 2,
+		CTimerManager(Config::App::TOTAL_SUPPORT_USER_NUM * 8,
 				Config::App::THREAD_STACK_SIZE) {
 }
 
@@ -64,7 +64,7 @@ bool_ CTransactionManager::registerTransaction(CTransaction *transaction) {
 		return false_v;
 	}
 
-	_transactionMap.insert(TransactionMap::value_type(sessionId, transaction));
+	_transactionMap[sessionId] = transaction;
 	log_info("[%p]CTransactionManager::registerTransaction: transaction "
 			"sessionId-%s, id-%lu, total registered transactions-%lu",
 			transaction, sessionId, id, _transactionMap.size());
@@ -111,13 +111,13 @@ bool_ CTransactionManager::__onTimer(ub8_ timerId, obj_ parameterI,
 	msg.header.size = sizeof(Message::TPDUOnTimer);
 	msg.header.type = Message::MT_CONTROL;
 	msg.header.cmd = Message::MC_ON_TIMER;
-	msg.header.stmp = CBase::now();
-	msg.header.ver = 0x0100;
+	msg.header.ver = Config::App::PROTOCOL_VERSION;
 	msg.header.lang = 1;
 	msg.header.seq = 0;
+	msg.header.stmp = CBase::now();
 	msg.header.ext = (ub8_) transaction;
 	msg.timerId = (ub8_) timerId;
-	msg.parameter = (ub8_)parameterII;
+	msg.parameter = (ub8_) parameterII;
 
 	transaction->getNode()->getGroup()->putMessage((Message::TMsg *) &msg);
 

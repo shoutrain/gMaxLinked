@@ -26,6 +26,7 @@
 #include <sys/syslog.h>
 
 const c1_ DAEMON_NAME[] = "gMaxLinked";
+const c1_ DAEMON_VER[] = "1.0.0";
 const c1_ RUN_AS_USER[] = "root";
 const c1_ LOCK_FILE[] = "/var/lock/subsys/gMaxLinked";
 const c1_ PID_FILE[] = "/var/run/gMaxLinked.pid";
@@ -165,11 +166,27 @@ static none_ enableDump() {
 	setrlimit(RLIMIT_CORE, &res);
 }
 
+static b4_ checkParameters(b4_ argc, c1_ **argv) {
+	if (1 == argc) {
+		return 0;
+	} else if (2 == argc) {
+		if (0 == strcmp("-version", argv[1])) {
+			printf("Version: %s\n", DAEMON_VER);
+
+			return 1;
+		} else {
+			return 2;
+		}
+	} else {
+		return -1;
+	}
+}
+
 static none_ run(b4_ argc, c1_ **argv) {
 	// load configure file
 	c1_ *conf = null_v;
 
-	if (2 <= argc) {
+	if (2 == argc) {
 		conf = argv[1];
 	}
 
@@ -194,6 +211,8 @@ static none_ run(b4_ argc, c1_ **argv) {
 }
 
 b4_ main(b4_ argc, c1_ **argv) {
+	signal(SIGPIPE, SIG_IGN);
+
 	if (!CBase::initialize()) {
 		return 1;
 	}
@@ -205,8 +224,18 @@ b4_ main(b4_ argc, c1_ **argv) {
 	// enable dump to catch the bugs and issues
 	enableDump();
 
+	int ret = checkParameters(argc, argv);
+
 	// run loop
-	run(argc, argv);
+	if (0 == ret || 2 == ret) {
+		run(argc, argv);
+	} else if (1 == ret) {
+		// version print
+	} else {
+		syslog(LOG_NOTICE,
+				"Please use: %s -version or %s [configure file path]",
+				DAEMON_NAME, DAEMON_NAME);
+	}
 
 	// finish up
 	syslog(LOG_NOTICE, "terminated");

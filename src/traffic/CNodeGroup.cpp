@@ -14,43 +14,54 @@
 #include "CTrafficManager.h"
 #include "CNode.h"
 #include "../transaction/CTransaction.h"
-#include "../common/CAutoLock.h"
 
 CNodeGroup::CNodeGroup() :
-		_worker(Config::App::THREAD_STACK_SIZE), _cond(&_mutex), _queue(
-				Config::App::MESSAGE_MAX_NUM_IN_QUEUE * Message::MSG_MAX_LENGTH) {
-	_nodeNum = 0;
+		_worker(Config::App::THREAD_STACK_SIZE), _queue(
+				Config::App::MESSAGE_MAX_NUM_IN_QUEUE * Message::MSG_MAX_LENGTH,
+				&_mutex) {
+	_pos = _container.end();
 	_worker.work(this, true_v);
 }
 
 CNodeGroup::~CNodeGroup() {
 }
 
-none_ CNodeGroup::attach(CNode *node, const c1_ *ip, ub2_ port, b4_ fd) {
+bool_ CNodeGroup::attach(CNode *node, const c1_ *ip, ub2_ port, b4_ fd) {
 	assert(node);
+	CAutoLock al(&_mutex);
 
-	if (0 == _nodeNum) {
+	if (false_v == node->onAttach(this, ip, port, fd)) {
+		return false_v;
+	}
+
+	if (0 == _container.size()) {
 		_ro.connect();
 	}
 
-	_nodeNum++;
-	node->onAttach(this, ip, port, fd);
+	_container.push_back(node);
+
+	return true_v;
 }
 
 none_ CNodeGroup::detach(CNode *node) {
 	assert(node);
-	node->onDetach();
-	_nodeNum--;
+	CAutoLock al(&_mutex);
 
-	if (0 == _nodeNum) {
+	if (*_pos == node) {
+		_pos++;
+	}
+
+	_container.remove(node);
+
+	if (0 == _container.size()) {
 		_ro.disconnect();
 	}
+
+	node->onDetach();
 }
 
 bool_ CNodeGroup::putMessage(const Message::TMsg *msg) {
 	assert(msg);
-	CAutoLock al(&_mutex);
-
 	log_debug("[%p %p]CNodeGroup::putMessage: write a message", (obj_ )msg->ext,
 			this);
 
@@ -61,16 +72,23 @@ bool_ CNodeGroup::putMessage(const Message::TMsg *msg) {
 		return false_v;
 	}
 
-	_cond.unlock();
-
 	return true_v;
 }
 
 bool_ CNodeGroup::working() {
-	_mutex.lock();
+	bool_ rollingQueue = _rollingQueue();
+	bool_ rollingNode = _rollingNode();
 
+	if (false_v == rollingQueue && false_v == rollingNode) {
+		sleep(0, 50);
+	}
+
+	return true_v;
+}
+
+bool_ CNodeGroup::_rollingQueue() {
 	if (0 == _queue.getUsedSize()) {
-		_cond.lock();
+		return false_v;
 	}
 
 	ub4_ n = _queue.read(_buffer, sizeof(ub2_));
@@ -79,14 +97,18 @@ bool_ CNodeGroup::working() {
 	ub2_ size = *(ub2_ *) _buffer;
 
 	n = _queue.read(_buffer + sizeof(ub2_), size - sizeof(ub2_));
-	assert(size == n + sizeof(ub2_));
+
+	if (n + sizeof(ub2_) != size) {
+		log_error("[%p]CNodeGroup::rollingQueue: size doesn't match", this);
+
+		return false_v;
+	}
 
 	Message::TMsg *msg = (Message::TMsg *) _buffer;
 	assert(msg->ext);
 
-	log_debug("[%p %p]CNodeGroup::working: read a message", (obj_ )msg->ext,
-			this);
-	_mutex.unlock();
+	log_debug("[%p %p]CNodeGroup::rollingQueue: read a message",
+			(obj_ )msg->ext, this);
 
 	CTransaction *transaction = (CTransaction *) msg->ext;
 	ETransactionStatus status = transaction->getStatus();
@@ -96,6 +118,33 @@ bool_ CNodeGroup::working() {
 			assert(OVER == transaction->getStatus());
 			CTrafficManager::instance()->recycleNode(transaction->getNode());
 		}
+	}
+
+	return true_v;
+}
+
+bool_ CNodeGroup::_rollingNode() {
+	_mutex.lock();
+
+	if (0 == _container.size()) {
+		_mutex.unlock();
+
+		return false_v;
+	}
+
+	if (_container.end() == _pos) {
+		_pos = _container.begin();
+	}
+
+	CNode *node = *_pos++;
+
+	_mutex.unlock();
+
+	CTransaction *transaction = node->getTransaction();
+	ETransactionStatus status = transaction->getStatus();
+
+	if (READY == status) {
+		transaction->onCheck();
 	}
 
 	return true_v;

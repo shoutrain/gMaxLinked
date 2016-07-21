@@ -15,12 +15,15 @@
 #include "../common/IWorkable.h"
 #include "../common/CWorker.h"
 #include "../common/CMutex.h"
-#include "../common/CCond.h"
 #include "../common/CLoopBuffer.h"
 #include "../database/CRedisOperator.h"
 #include "Message.h"
 
 class CNode;
+
+#include <list>
+
+typedef std::list<CNode *> Container;
 
 class CNodeGroup: public CBase, public IWorkable {
 public:
@@ -28,7 +31,7 @@ public:
 	virtual ~CNodeGroup();
 
 	// called by CTrafficManager thread
-	none_ attach(CNode *node, const c1_ *ip, ub2_ port, b4_ fd);
+	bool_ attach(CNode *node, const c1_ *ip, ub2_ port, b4_ fd);
 
 	// called by CTrafficManager thread
 	none_ detach(CNode *node);
@@ -44,16 +47,18 @@ public:
 
 private:
 	CWorker _worker;
-
 	CMutex _mutex;
-	CCond _cond;
 
 	CLoopBuffer _queue;
 	ub1_ _buffer[Message::MSG_MAX_LENGTH];
 
 	CRedisOperator _ro;
 
-	ub4_ _nodeNum;
+	Container _container;
+	Container::iterator _pos;
+
+	bool_ _rollingQueue();
+	bool_ _rollingNode();
 };
 
 #endif // _C_NODE_GROUP_H_

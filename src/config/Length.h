@@ -21,6 +21,7 @@ const ub4_ PATH = 256;
 
 // define your lengths here
 const ub4_ SESSION_ID = 16;
+const ub4_ JSON = 384; // 256 + 128
 
 }
 

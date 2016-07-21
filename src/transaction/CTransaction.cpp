@@ -22,6 +22,8 @@
 CTransaction::CTransaction(CNode *node) :
 		_node(node) {
 	_status = FREE;
+	_build = 0;
+	_lastUpdate = 0;
 	memset(_sessionId, 0, Size::SESSION_ID);
 	_id = 0;
 	_keepLiveTimerId = 0;
@@ -32,7 +34,9 @@ CTransaction::CTransaction(CNode *node) :
 CTransaction::~CTransaction() {
 }
 
-none_ CTransaction::onAttach() {
+bool_ CTransaction::onAttach() {
+	assert(0 == _build);
+	assert(0 == _lastUpdate);
 	assert(0 == _sessionId[0]);
 	assert(0 == _id);
 	assert(FREE == _status);
@@ -42,9 +46,16 @@ none_ CTransaction::onAttach() {
 	assert(0 == _mapSeq2Timer.size());
 
 	_status = CONNECTED;
+
 	// set timer to wait the next message coming
 	_keepLiveTimerId = CTransactionManager::instance()->setTimer(
 			Config::App::HEARTBEAT_INTERVAL, this, (obj_) _status, 1);
+
+	if (0 == _keepLiveTimerId) {
+		return false_v;
+	}
+
+	return true_v;
 }
 
 none_ CTransaction::onDetach() {
@@ -59,49 +70,59 @@ none_ CTransaction::onDetach() {
 	_status = FREE;
 }
 
-none_ CTransaction::over(ETransactionExitReason reason) {
-	Message::TPUDOnOver msg;
+bool_ CTransaction::over(ETransactionExitReason reason, bool_ useQueue) {
+	Message::TPDUOnOver msg;
 
-	msg.header.size = sizeof(Message::TPUDOnOver);
+	msg.header.size = sizeof(Message::TPDUOnOver);
 	msg.header.type = Message::MT_CONTROL;
 	msg.header.cmd = Message::MC_ON_OVER;
-	msg.header.stmp = CBase::now();
-	msg.header.ver = 0x0100;
-	msg.header.lang = 1;
+	msg.header.ver = Config::App::PROTOCOL_VERSION;
+	msg.header.lang = Message::ML_CN;
 	msg.header.seq = 0;
+	msg.header.stmp = CBase::now();
 	msg.header.ext = (ub8_) this;
 	msg.reason = (b4_) reason;
 
-	__send((Message::TMsg *) &msg, false_v, true_v);
+	if (true_v == useQueue) {
+		return _node->getGroup()->putMessage((const Message::TMsg *) &msg);
+	} else {
+		return __onStop(&msg);
+	}
 }
 
 bool_ CTransaction::onMessage(const Message::TMsg *msg) {
-	if (Message::MT_CONTROL == msg->type
+	if (Message::MT_ACCOUNT == msg->type
 			&& Message::MC_HAND_SHAKE == msg->cmd) {
 		return __onStart((Message::TPDUHandShake *) msg);
-	} else if (Message::MT_CONTROL | Message::MT_SIGN_ACK == msg->type
+	} else if ((Message::MT_CONTROL | Message::MT_SIGN_ACK) == msg->type
 			&& Message::MC_HEART_BEAT == msg->cmd) {
-		return __onHeartBeat((Message::TPDUHeartBeat *) msg);
+		return __onHeartBeat((Message::TPDUHeartBeatAck *) msg);
+	} else if (Message::MT_SERVICE == msg->type
+			&& Message::MC_SEND_MSG == msg->cmd) {
+		return __onSendMsg((Message::TPDUSendMsg *) msg);
+	} else if ((Message::MT_SERVICE | Message::MT_SIGN_ACK) == msg->type
+			&& Message::MC_PUSH_MSG == msg->cmd) {
+		return __onPushMsg((Message::TPDUPushMsgAck *) msg);
 	} else if (Message::MC_ON_TIMER == msg->cmd) {
 		return __onTimer((Message::TPDUOnTimer *) msg);
 	} else if (Message::MC_ON_OVER == msg->cmd) {
-		return __onStop((Message::TPUDOnOver *) msg);
+		return __onStop((Message::TPDUOnOver *) msg);
 	} else {
 		log_info("[%p]CTransaction::onMessage: unknown message-%x-%x, current "
 				"status-%d", this, msg->type, msg->cmd, _status);
-		over(UNKNOWN_MESSAGE);
-
-		return true_v;
+		return over(UNKNOWN_MESSAGE);
 	}
+}
+
+void CTransaction::onCheck() {
+	_node->getGroup()->ro().checkMessages(this);
 }
 
 bool_ CTransaction::__onStart(const Message::TPDUHandShake* msg) {
 	log_debug("[%p]CTransaction::onStart: current status-%d", this, _status);
 
 	if (CONNECTED != _status) {
-		over(WRONG_STATUS);
-
-		return true_v;
+		return over(WRONG_STATUS);
 	}
 
 	assert(_keepLiveTimerId);
@@ -113,7 +134,6 @@ bool_ CTransaction::__onStart(const Message::TPDUHandShake* msg) {
 	memcpy(&msgAck, msg, sizeof(Message::THeader));
 	msgAck.header.size = sizeof(Message::TPDUHandShakeAck);
 	msgAck.header.type |= Message::MT_SIGN_ACK;
-	msgAck.header.stmp = CBase::now();
 	msgAck.ack.code = 0;
 
 	if (Config::App::BASE_BUILD > msg->build) {
@@ -122,9 +142,8 @@ bool_ CTransaction::__onStart(const Message::TPDUHandShake* msg) {
 				msg->build);
 		msgAck.ack.code = CLIENT_TOO_OLD;
 		__send((Message::TMsg *) &msgAck, false_v);
-		over(CLIENT_TOO_OLD);
 
-		return true_v;
+		return over(CLIENT_TOO_OLD);
 	}
 
 	memcpy(_sessionId, msg->sessionId, Size::SESSION_ID);
@@ -137,48 +156,131 @@ bool_ CTransaction::__onStart(const Message::TPDUHandShake* msg) {
 		_id = 0;
 		msgAck.ack.code = NO_THE_SESSION_FOUND;
 		__send((Message::TMsg *) &msgAck, false_v);
-		over(NO_THE_SESSION_FOUND);
 
-		return true_v;
+		return over(NO_THE_SESSION_FOUND);
 	}
 
-	if (!CTransactionManager::instance()->registerTransaction(this)) {
+	if (false_v == CTransactionManager::instance()->registerTransaction(this)) {
 		log_notice("[%p]CTransaction::onStart: there is an transaction with "
 				"the same sessionId-%s and id-%lu", this, _sessionId, _id);
 		memset(_sessionId, 0, Size::SESSION_ID);
 		_id = 0;
 		msgAck.ack.code = SAME_SESSION_ID;
 		__send((Message::TMsg *) &msgAck, false_v);
-		over(SAME_SESSION_ID);
 
-		return true_v;
+		return over(SAME_SESSION_ID);
 	}
 
 	_status = READY;
 	msgAck.ack.code = 0;
+	_lastUpdate = msg->lastUpdate;
 
 	if (true_v == __send((Message::TMsg *) &msgAck, false_v)) {
 		_heartbeat = true_v;
 		_keepLiveTimerId = CTransactionManager::instance()->setTimer(
 				Config::App::HEARTBEAT_INTERVAL, this, (obj_) _status, 0);
+
+		if (0 == _keepLiveTimerId) {
+			return over(NO_MORE_TIMER);
+		}
 	}
 
 	return true_v;
 }
 
-bool_ CTransaction::__onHeartBeat(const Message::TPDUHeartBeat *msg) {
+bool_ CTransaction::__onHeartBeat(const Message::TPDUHeartBeatAck *msg) {
 	log_debug("[%p]CTransaction::onHeartBeat: current status-%d", this,
 			_status);
 
 	if (READY != _status) {
-		over(WRONG_STATUS);
-
-		return true_v;
+		return over(WRONG_STATUS);
 	}
 
 	_heartbeat = true_v;
 
 	return true_v;
+}
+
+// Called by CNodeGroup thread
+bool_ CTransaction::__onSendMsg(const Message::TPDUSendMsg *msg) {
+	log_debug("[%p]CTransaction::onSendMsg: current status-%d", this, _status);
+
+	if (READY != _status) {
+		return over(WRONG_STATUS);
+	}
+
+	Message::TPDUSendMsgAck msgAck;
+
+	memcpy(&msgAck.header, &msg->header, sizeof(Message::THeader));
+	msgAck.header.size = sizeof(Message::TPDUSendMsgAck);
+	msgAck.header.type |= Message::MT_SIGN_ACK;
+	msgAck.header.stmp = CBase::now();
+	msgAck.ack.code = 0;
+
+	if (false_v
+			== _node->getGroup()->ro().sendMessage(this, msg,
+					msgAck.messageId)) {
+		msgAck.ack.code = NO_DESTINATION_FOUND;
+	}
+
+	__send((Message::TMsg *) &msgAck, false_v);
+
+	return true_v;
+}
+
+bool_ CTransaction::handlePushMessage(ub1_ ornType, ub8_ ornId, ub8_ ornExtId,
+		ub8_ messageId, const c1_ *json, ub2_ size, ub8_ timestamp) {
+	Message::TPDUPushMsg msg;
+
+	msg.header.size = sizeof(Message::TPDUPushMsg);
+	msg.header.type = Message::MT_SERVICE;
+	msg.header.cmd = Message::MC_PUSH_MSG;
+	msg.header.ver = Config::App::PROTOCOL_VERSION;
+	msg.header.lang = Message::ML_CN;
+	msg.header.seq = 0;
+	msg.header.stmp = CBase::now();
+	msg.header.ext = 0;
+	msg.ornType = ornType;
+	msg.ornId = ornId;
+	msg.ornExtId = ornExtId;
+	msg.messageId = messageId;
+	memset(msg.json, 0, Size::JSON);
+	assert(Length::JSON >= size);
+	strncpy(msg.json, json, Length::JSON);
+
+	bool_ ret = __send((Message::TMsg *) &msg, true_v);
+
+	if (true_v == ret) {
+		_lastUpdate = timestamp;
+	}
+
+	return ret;
+}
+
+// Called by CNodeGroup thread
+bool_ CTransaction::__onPushMsg(const Message::TPDUPushMsgAck *msg) {
+	log_debug("[%p]CTransaction::onPushMsg: current status-%d", this, _status);
+
+	if (READY != _status) {
+		return over(WRONG_STATUS);
+	}
+
+	assert(msg->header.seq);
+	if (0 != msg->header.seq) {
+		MapSeq2Timer::iterator pos = _mapSeq2Timer.find(msg->header.seq);
+
+		if (_mapSeq2Timer.end() != pos) {
+			CTransactionManager::instance()->killTimer(pos->second);
+			_mapSeq2Timer.erase(pos);
+		}
+
+		return true_v;
+	}
+
+	log_error("[%p]CTransaction::onPushMsg: no sequence found in push msg ack",
+			this);
+
+	return false_v;
 }
 
 bool_ CTransaction::__onTimer(const Message::TPDUOnTimer *msg) {
@@ -193,23 +295,23 @@ bool_ CTransaction::__onTimer(const Message::TPDUOnTimer *msg) {
 		if (CONNECTED == _status) {
 			log_debug("[%p]CTransaction::onTimer: waiting handshake timeout, "
 					"current status-%d", this, _status);
-			over(TIME_OUT);
+
+			return over(TIME_OUT);
 		} else if (READY == _status) {
 			if (false_v == _heartbeat) {
 				log_debug("[%p]CTransaction::onTimer: heartbeat timeout, "
 						"current status-%d", this, _status);
-				over(TIME_OUT);
+
+				return over(TIME_OUT);
 			} else {
 				Message::TPDUHeartBeat message;
 
 				message.header.size = sizeof(Message::TPDUHeartBeat);
 				message.header.type = Message::MT_CONTROL;
 				message.header.cmd = Message::MC_HEART_BEAT;
-				message.header.ver = 0x0100;
+				message.header.ver = Config::App::PROTOCOL_VERSION;
 				message.header.lang = 1;
 				message.header.seq = 0;
-				message.header.stmp = CBase::now();
-				message.header.ext = 0;
 
 				__send((Message::TMsg *) &message, false_v);
 				_heartbeat = false_v;
@@ -227,13 +329,14 @@ bool_ CTransaction::__onTimer(const Message::TPDUOnTimer *msg) {
 			return true_v;
 		}
 
-		ub4_ seq = msg->parameter;
-		MapSeq2Timer::iterator pos = _mapSeq2Timer.find(msg->timerId);
+		ub4_ seq = (ub4_) msg->parameter;
+		MapSeq2Timer::iterator pos = _mapSeq2Timer.find(seq);
 
 		if (_mapSeq2Timer.end() != pos) {
 			log_debug("[%p]CTransaction::onTimer: waitting ack timeout, "
 					"current status-%d, seq-%u", this, _status, seq);
-			over(TIME_OUT);
+
+			return over(TIME_OUT);
 		} else {
 			assert(false_v);
 		}
@@ -242,7 +345,7 @@ bool_ CTransaction::__onTimer(const Message::TPDUOnTimer *msg) {
 	return true_v;
 }
 
-bool_ CTransaction::__onStop(const Message::TPUDOnOver *msg) {
+bool_ CTransaction::__onStop(const Message::TPDUOnOver *msg) {
 	log_debug("[%p]CTransaction::onStop: current status-%d", this, _status);
 	_status = OVER;
 
@@ -300,41 +403,45 @@ bool_ CTransaction::__onStop(const Message::TPUDOnOver *msg) {
 	if (0 != _sessionId[0]) {
 		CTransactionManager::instance()->unregisterTransaction(this);
 		memset(_sessionId, 0, Size::SESSION_ID);
-		_id = 0;
 	}
 
+	_build = 0;
+	_lastUpdate = 0;
+	_id = 0;
 	_heartbeat = false_v;
 	_seqCounter = 0;
 
 	return false_v;
 }
 
-bool_ CTransaction::__send(Message::TMsg *msg, bool_ waitAck, bool_ interval) {
+bool_ CTransaction::__send(Message::TMsg *msg, bool_ waitAck) {
 	assert(null_v != msg);
+	msg->stmp = CBase::now();
+	msg->ext = 0;
 
-	if (false_v == interval) {
-		if (true_v == waitAck) {
-			ub4_ seq = ++_seqCounter;
+	if (true_v == waitAck) {
+		ub4_ seq = ++_seqCounter;
 
-			if (0 == seq) {
-				seq = ++_seqCounter;
-			}
-
-			msg->seq = seq;
+		if (0 == seq) {
+			seq = ++_seqCounter;
 		}
 
-		bool_ ret = _node->send(msg);
-
-		if (true_v == ret && true_v == waitAck) {
-			ub8_ timeId = CTransactionManager::instance()->setTimer(
-					Config::App::HEARTBEAT_INTERVAL, this,
-					(obj_) (ub8_) msg->seq, 1);
-
-			_mapSeq2Timer.insert(MapSeq2Timer::value_type(msg->seq, timeId));
-		}
-
-		return ret;
-	} else {
-		return _node->getGroup()->putMessage(msg);
+		msg->seq = seq;
 	}
+
+	bool_ ret = _node->send(msg);
+
+	if (true_v == ret && true_v == waitAck) {
+		ub8_ timerId = CTransactionManager::instance()->setTimer(
+				Config::App::HEARTBEAT_INTERVAL, this, (obj_) (ub8_) msg->seq,
+				1);
+
+		if (timerId) {
+			_mapSeq2Timer[msg->seq] = timerId;
+		} else {
+			return over(NO_MORE_TIMER);
+		}
+	}
+
+	return ret;
 }

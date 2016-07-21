@@ -23,6 +23,7 @@ const ub4_ PATH = Length::PATH + 1;
 
 // define your sizes here according to Length.h
 const ub4_ SESSION_ID = Length::SESSION_ID + 1;
+const ub4_ JSON = Length::JSON + 1;
 }
 
 #endif // _SIZE_H_

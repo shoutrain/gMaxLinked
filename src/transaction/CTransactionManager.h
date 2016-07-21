@@ -16,9 +16,16 @@
 
 class CTransaction;
 
+#include <string.h>
 #include <map>
 
-typedef std::map<const c1_ *, CTransaction *> TransactionMap;
+struct StrCmp {
+	bool operator()(const c1_ *keyLeft, const c1_ *keyRight) const {
+		return strcmp(keyLeft, keyRight) < 0;
+	}
+};
+
+typedef std::map<const c1_ *, CTransaction *, StrCmp> TransactionMap;
 
 class CTransactionManager: public CTimerManager {
 public:
