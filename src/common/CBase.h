@@ -13,7 +13,9 @@
 
 #include "BaseType.h"
 
+extern "C" {
 #include <log4c.h>
+}
 
 class CBase {
 public:

@@ -4,11 +4,9 @@ You can use gMaxLinked to establish application used by android push, WeChat/Lin
 
 There are C and Java code for corresponding clients reference, you can find them in client folder.  You can use C client code directly, they have been tested with gMaxLinked as a server.  The java code can be used as reference only due to not be up to date. 
 
-gMaxLinked only work on linux 64-bit(I compile and run the application on CentOS 7 64-bit).
+gMaxLinked only work on linux 64-bit(I compile and run the application on CentOS 7 64-bit and Ubuntu 16.04 LTS 66-bit).
 
 Following libs is necessary for gMaxLinked:
 > pthread
 > hiredis
 > log4c
-
-Now maybe the whole project doesn't work well.  I will make it work well later, I mean after I finished my company's products development, which is based on gMaxLinked.

@@ -3,12 +3,13 @@
 AC_PREREQ([2.69])
 AC_INIT([gMaxLined], [1.0], [shoutrain_goo@aliyun.com])
 AC_COPYRIGHT([GPL])
-AC_CONFIG_SRCDIR([src/gMaxLinked.cpp])
+AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 
 # Checks for programs.
 AC_PROG_CXX
+AC_PROG_CC
 
 # Checks for libraries.
 AC_PROG_RANLIB
@@ -20,7 +21,6 @@ AC_CHECK_LIB([log4c], [log4c_init])
 AC_CHECK_LIB([pthread], [pthread_create])
 
 # Checks for header files.
-AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netinet/in.h stddef.h stdlib.h string.h sys/param.h sys/socket.h sys/time.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
