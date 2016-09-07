@@ -11,7 +11,7 @@
 #define GLOBAL_CONFIG
 #include "Config.h"
 
-#include <src/common/CConfReader.h>
+#include "../common/CConfReader.h"
 #include "DefaultConfig.h"
 
 #include <string.h>

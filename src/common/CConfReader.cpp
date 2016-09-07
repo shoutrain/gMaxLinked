@@ -8,12 +8,14 @@
  ============================================================================
  */
 
+#include "CConfReader.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
-#include <CConfReader.h>
+
 
 CConfReader::CConfReader(const c1_ *fileName) {
 	if (null_v == fileName || 0 == fileName[0]) {

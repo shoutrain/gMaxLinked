@@ -1,0 +1,2 @@
+objs = Object(Glob('*.cpp*'))
+Return('objs')
