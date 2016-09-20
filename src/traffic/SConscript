@@ -1,2 +1,5 @@
-objs = Object(Glob('*.cpp*'))
+env = Environment()
+env.Append(CCFLAGS = '-std=c++11')
+
+objs = env.Object(Glob('*.cpp*'))
 Return('objs')

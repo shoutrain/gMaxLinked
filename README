@@ -10,3 +10,5 @@ Following libs is necessary for gMaxLinked:
 > pthread
 > hiredis
 > log4c
+
+Plase use SCons to build the project.

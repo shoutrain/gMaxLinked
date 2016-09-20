@@ -30,7 +30,7 @@ typedef enum {
 	true_v
 } bool_;
 
-#define null_v 0
+#define null_v nullptr
 
 typedef void none_;
 typedef void * obj_;
