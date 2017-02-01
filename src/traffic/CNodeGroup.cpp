@@ -113,9 +113,10 @@ bool_ CNodeGroup::_rollingQueue() {
 	CTransaction *transaction = (CTransaction *) msg->ext;
 	ETransactionStatus status = transaction->getStatus();
 
-	if (CONNECTED == status || READY == status) {
+	if (ETransactionStatus::CONNECTED == status
+			|| ETransactionStatus::READY == status) {
 		if (!transaction->onMessage(msg)) {
-			assert(OVER == transaction->getStatus());
+			assert(ETransactionStatus::OVER == transaction->getStatus());
 			CTrafficManager::instance()->recycleNode(transaction->getNode());
 		}
 	}
@@ -143,7 +144,7 @@ bool_ CNodeGroup::_rollingNode() {
 	CTransaction *transaction = node->getTransaction();
 	ETransactionStatus status = transaction->getStatus();
 
-	if (READY == status) {
+	if (ETransactionStatus::READY == status) {
 		transaction->onCheck();
 	}
 

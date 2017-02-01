@@ -21,7 +21,7 @@
 
 CTransaction::CTransaction(CNode *node) :
 		_node(node) {
-	_status = FREE;
+	_status = ETransactionStatus::FREE;
 	_build = 0;
 	_lastUpdate = 0;
 	memset(_sessionId, 0, Size::SESSION_ID);
@@ -39,13 +39,13 @@ bool_ CTransaction::onAttach() {
 	assert(0 == _lastUpdate);
 	assert(0 == _sessionId[0]);
 	assert(0 == _id);
-	assert(FREE == _status);
+	assert(ETransactionStatus::FREE == _status);
 	assert(0 == _keepLiveTimerId);
 	assert(false_v == _heartbeat);
 	assert(0 == _seqCounter);
 	assert(0 == _mapSeq2Timer.size());
 
-	_status = CONNECTED;
+	_status = ETransactionStatus::CONNECTED;
 
 	// set timer to wait the next message coming
 	_keepLiveTimerId = CTransactionManager::instance()->setTimer(
@@ -61,13 +61,13 @@ bool_ CTransaction::onAttach() {
 none_ CTransaction::onDetach() {
 	assert(0 == _sessionId[0]);
 	assert(0 == _id);
-	assert(OVER == _status);
+	assert(ETransactionStatus::OVER == _status);
 	assert(0 == _keepLiveTimerId);
 	assert(false_v == _heartbeat);
 	assert(0 == _seqCounter);
 	assert(0 == _mapSeq2Timer.size());
 
-	_status = FREE;
+	_status = ETransactionStatus::FREE;
 }
 
 bool_ CTransaction::over(ETransactionExitReason reason, bool_ useQueue) {
@@ -110,7 +110,7 @@ bool_ CTransaction::onMessage(const Message::TMsg *msg) {
 	} else {
 		log_info("[%p]CTransaction::onMessage: unknown message-%x-%x, current "
 				"status-%d", this, msg->type, msg->cmd, _status);
-		return over(UNKNOWN_MESSAGE);
+		return over(ETransactionExitReason::UNKNOWN_MESSAGE);
 	}
 }
 
@@ -121,8 +121,8 @@ void CTransaction::onCheck() {
 bool_ CTransaction::__onStart(const Message::TPDUHandShake* msg) {
 	log_debug("[%p]CTransaction::onStart: current status-%d", this, _status);
 
-	if (CONNECTED != _status) {
-		return over(WRONG_STATUS);
+	if (ETransactionStatus::CONNECTED != _status) {
+		return over(ETransactionExitReason::WRONG_STATUS);
 	}
 
 	assert(_keepLiveTimerId);
@@ -140,10 +140,10 @@ bool_ CTransaction::__onStart(const Message::TPDUHandShake* msg) {
 		log_notice("[%p]CTransaction::onStart: client version with %u or above"
 				" is necessary, now it's %u", this, Config::App::BASE_BUILD,
 				msg->build);
-		msgAck.ack.code = CLIENT_TOO_OLD;
+		msgAck.ack.code = (ub2_)ETransactionExitReason::CLIENT_TOO_OLD;
 		__send((Message::TMsg *) &msgAck, false_v);
 
-		return over(CLIENT_TOO_OLD);
+		return over(ETransactionExitReason::CLIENT_TOO_OLD);
 	}
 
 	memcpy(_sessionId, msg->sessionId, Size::SESSION_ID);
@@ -154,10 +154,10 @@ bool_ CTransaction::__onStart(const Message::TPDUHandShake* msg) {
 				"sessionId-%s", this, _sessionId);
 		memset(_sessionId, 0, Size::SESSION_ID);
 		_id = 0;
-		msgAck.ack.code = NO_THE_SESSION_FOUND;
+		msgAck.ack.code = (ub2_)ETransactionExitReason::NO_THE_SESSION_FOUND;
 		__send((Message::TMsg *) &msgAck, false_v);
 
-		return over(NO_THE_SESSION_FOUND);
+		return over(ETransactionExitReason::NO_THE_SESSION_FOUND);
 	}
 
 	if (false_v == CTransactionManager::instance()->registerTransaction(this)) {
@@ -165,13 +165,13 @@ bool_ CTransaction::__onStart(const Message::TPDUHandShake* msg) {
 				"the same sessionId-%s and id-%lu", this, _sessionId, _id);
 		memset(_sessionId, 0, Size::SESSION_ID);
 		_id = 0;
-		msgAck.ack.code = SAME_SESSION_ID;
+		msgAck.ack.code = (ub2_)ETransactionExitReason::SAME_SESSION_ID;
 		__send((Message::TMsg *) &msgAck, false_v);
 
-		return over(SAME_SESSION_ID);
+		return over(ETransactionExitReason::SAME_SESSION_ID);
 	}
 
-	_status = READY;
+	_status = ETransactionStatus::READY;
 	msgAck.ack.code = 0;
 	_lastUpdate = msg->lastUpdate;
 
@@ -181,7 +181,7 @@ bool_ CTransaction::__onStart(const Message::TPDUHandShake* msg) {
 				Config::App::HEARTBEAT_INTERVAL, this, (obj_) _status, 0);
 
 		if (0 == _keepLiveTimerId) {
-			return over(NO_MORE_TIMER);
+			return over(ETransactionExitReason::NO_MORE_TIMER);
 		}
 	}
 
@@ -192,8 +192,8 @@ bool_ CTransaction::__onHeartBeat(const Message::TPDUHeartBeatAck *msg) {
 	log_debug("[%p]CTransaction::onHeartBeat: current status-%d", this,
 			_status);
 
-	if (READY != _status) {
-		return over(WRONG_STATUS);
+	if (ETransactionStatus::READY != _status) {
+		return over(ETransactionExitReason::WRONG_STATUS);
 	}
 
 	_heartbeat = true_v;
@@ -205,8 +205,8 @@ bool_ CTransaction::__onHeartBeat(const Message::TPDUHeartBeatAck *msg) {
 bool_ CTransaction::__onSendMsg(const Message::TPDUSendMsg *msg) {
 	log_debug("[%p]CTransaction::onSendMsg: current status-%d", this, _status);
 
-	if (READY != _status) {
-		return over(WRONG_STATUS);
+	if (ETransactionStatus::READY != _status) {
+		return over(ETransactionExitReason::WRONG_STATUS);
 	}
 
 	Message::TPDUSendMsgAck msgAck;
@@ -220,7 +220,7 @@ bool_ CTransaction::__onSendMsg(const Message::TPDUSendMsg *msg) {
 	if (false_v
 			== _node->getGroup()->ro().sendMessage(this, msg,
 					msgAck.messageId)) {
-		msgAck.ack.code = NO_DESTINATION_FOUND;
+		msgAck.ack.code = (ub2_)ETransactionExitReason::NO_DESTINATION_FOUND;
 	}
 
 	__send((Message::TMsg *) &msgAck, false_v);
@@ -261,8 +261,8 @@ bool_ CTransaction::handlePushMessage(ub1_ ornType, ub8_ ornId, ub8_ ornExtId,
 bool_ CTransaction::__onPushMsg(const Message::TPDUPushMsgAck *msg) {
 	log_debug("[%p]CTransaction::onPushMsg: current status-%d", this, _status);
 
-	if (READY != _status) {
-		return over(WRONG_STATUS);
+	if (ETransactionStatus::READY != _status) {
+		return over(ETransactionExitReason::WRONG_STATUS);
 	}
 
 	assert(msg->header.seq);
@@ -285,24 +285,24 @@ bool_ CTransaction::__onPushMsg(const Message::TPDUPushMsgAck *msg) {
 
 bool_ CTransaction::__onTimer(const Message::TPDUOnTimer *msg) {
 	if (_keepLiveTimerId == msg->timerId) {
-		if (_status != msg->parameter) {
+		if (_status != (ETransactionStatus)msg->parameter) {
 			log_debug("[%p]CTransaction::onTimer: timer status(%d) != "
 					"current(%d) status", this, msg->parameter, _status);
 
 			return true_v;
 		}
 
-		if (CONNECTED == _status) {
+		if (ETransactionStatus::CONNECTED == _status) {
 			log_debug("[%p]CTransaction::onTimer: waiting handshake timeout, "
 					"current status-%d", this, _status);
 
-			return over(TIME_OUT);
-		} else if (READY == _status) {
+			return over(ETransactionExitReason::TIME_OUT);
+		} else if (ETransactionStatus::READY == _status) {
 			if (false_v == _heartbeat) {
 				log_debug("[%p]CTransaction::onTimer: heartbeat timeout, "
 						"current status-%d", this, _status);
 
-				return over(TIME_OUT);
+				return over(ETransactionExitReason::TIME_OUT);
 			} else {
 				Message::TPDUHeartBeat message;
 
@@ -321,10 +321,10 @@ bool_ CTransaction::__onTimer(const Message::TPDUOnTimer *msg) {
 		}
 
 	} else {
-		if (READY != _status) {
+		if (ETransactionStatus::READY != _status) {
 			log_debug("[%p]CTransaction::onTimer: seq(%u)'s status(%d) is "
 					"expected, but now it's status(%d)", this, msg->parameter,
-					READY, _status);
+					ETransactionStatus::READY, _status);
 
 			return true_v;
 		}
@@ -336,7 +336,7 @@ bool_ CTransaction::__onTimer(const Message::TPDUOnTimer *msg) {
 			log_debug("[%p]CTransaction::onTimer: waitting ack timeout, "
 					"current status-%d, seq-%u", this, _status, seq);
 
-			return over(TIME_OUT);
+			return over(ETransactionExitReason::TIME_OUT);
 		} else {
 			assert(false_v);
 		}
@@ -347,40 +347,40 @@ bool_ CTransaction::__onTimer(const Message::TPDUOnTimer *msg) {
 
 bool_ CTransaction::__onStop(const Message::TPDUOnOver *msg) {
 	log_debug("[%p]CTransaction::onStop: current status-%d", this, _status);
-	_status = OVER;
+	_status = ETransactionStatus::OVER;
 
-	switch (msg->reason) {
-	case WRONG_STATUS:
+	switch ((ETransactionExitReason)msg->reason) {
+	case ETransactionExitReason::WRONG_STATUS:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this, "wrong status");
 		break;
-	case CLIENT_TOO_OLD:
+	case ETransactionExitReason::CLIENT_TOO_OLD:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
 				"client too old");
 		break;
-	case NO_THE_SESSION_FOUND:
+	case ETransactionExitReason::NO_THE_SESSION_FOUND:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
 				"no the session found");
 		break;
-	case SAME_SESSION_ID:
+	case ETransactionExitReason::SAME_SESSION_ID:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
 				"same session id");
 		break;
-	case TIME_OUT:
+	case ETransactionExitReason::TIME_OUT:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this, "time out");
 		break;
-	case UNKNOWN_MESSAGE:
+	case ETransactionExitReason::UNKNOWN_MESSAGE:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
 				"unknown message");
 		break;
-	case CONNECTION_BROKEN:
+	case ETransactionExitReason::CONNECTION_BROKEN:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
 				"connection broken");
 		break;
-	case CONNECTION_ERROR:
+	case ETransactionExitReason::CONNECTION_ERROR:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
 				"connection error");
 		break;
-	case CANNOT_RECV_DATA:
+	case ETransactionExitReason::CANNOT_RECV_DATA:
 		log_debug("[%p]CTransaction::onStop: reason-%s", this,
 				"cannot recv data");
 		break;
@@ -439,7 +439,7 @@ bool_ CTransaction::__send(Message::TMsg *msg, bool_ waitAck) {
 		if (timerId) {
 			_mapSeq2Timer[msg->seq] = timerId;
 		} else {
-			return over(NO_MORE_TIMER);
+			return over(ETransactionExitReason::NO_MORE_TIMER);
 		}
 	}
 

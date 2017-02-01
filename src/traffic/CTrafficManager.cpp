@@ -224,7 +224,8 @@ bool_ CTrafficManager::working() {
 		if (events[i].events & EPOLLRDHUP) {
 			log_debug("[%p %s:%u]CTrafficManager::working: node broken",
 					node->getTransaction(), node->getIp(), node->getPort());
-			node->getTransaction()->over(CONNECTION_BROKEN, true_v);
+			node->getTransaction()->over(
+					ETransactionExitReason::CONNECTION_BROKEN, true_v);
 
 			continue;
 		}
@@ -232,7 +233,8 @@ bool_ CTrafficManager::working() {
 		if (events[i].events & EPOLLERR) {
 			log_debug("[%p %s:%u]CTrafficManager::working: error happens",
 					node->getTransaction(), node->getIp(), node->getPort());
-			node->getTransaction()->over(CONNECTION_ERROR, true_v);
+			node->getTransaction()->over(
+					ETransactionExitReason::CONNECTION_ERROR, true_v);
 
 			continue;
 		}
@@ -243,7 +245,8 @@ bool_ CTrafficManager::working() {
 				log_debug("[%p %s:%u]CTrafficManager::working: "
 						"failed to receive data", node->getTransaction(),
 						node->getIp(), node->getPort());
-				node->getTransaction()->over(CANNOT_RECV_DATA, true_v);
+				node->getTransaction()->over(
+						ETransactionExitReason::CANNOT_RECV_DATA, true_v);
 			}
 		}
 	}
@@ -339,7 +342,8 @@ none_ CTrafficManager::_addNodes() {
 }
 
 none_ CTrafficManager::_delNode(CNode *node) {
-	if (FREE == node->getTransaction()->getStatus() || 0 == node->getFd()) {
+	if (ETransactionStatus::FREE ==
+			node->getTransaction()->getStatus() || 0 == node->getFd()) {
 		return;
 	}
 

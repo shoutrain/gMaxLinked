@@ -20,11 +20,11 @@ class CNode;
 class TTimer;
 
 // FREE->CONNECTED->READY->OVER->FREE
-enum ETransactionStatus {
+enum class ETransactionStatus {
 	FREE, CONNECTED, READY, OVER
 };
 
-enum ETransactionExitReason {
+enum class ETransactionExitReason {
 	WRONG_STATUS = 1,
 	CLIENT_TOO_OLD,
 	TIME_OUT,

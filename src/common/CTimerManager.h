@@ -17,7 +17,7 @@
 #include "CMutex.h"
 #include "CResource.h"
 
-enum ETimerStatus {
+enum class ETimerStatus {
 	NOTHING = 0x0000,
 
 	TO_BE_ADD = 0x0001, ADDED = 0x0002, TO_BE_DEL = 0x0004, DELETED = 0x0008,
@@ -35,7 +35,7 @@ struct TTimer {
 	TTimer *previous;
 	TTimer *next;
 
-	b4_ status;
+	ETimerStatus status;
 };
 
 #include <queue>

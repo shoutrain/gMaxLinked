@@ -36,7 +36,8 @@ ub8_ CTimerManager::setTimer(ub4_ period, obj_ parameterI, obj_ parameterII,
 		return 0;
 	}
 
-	assert(NOTHING == timer->status || DELETED == timer->status);
+	assert(ETimerStatus::NOTHING == timer->status
+			|| ETimerStatus::DELETED == timer->status);
 	struct timeval curTime;
 	gettimeofday(&curTime, null_v);
 
@@ -48,7 +49,7 @@ ub8_ CTimerManager::setTimer(ub4_ period, obj_ parameterI, obj_ parameterII,
 	timer->baseUS = curTime.tv_usec;
 	timer->previous = null_v;
 	timer->next = null_v;
-	timer->status = TO_BE_ADD;
+	timer->status = ETimerStatus::TO_BE_ADD;
 
 	_mutex.lock();
 	_queueForAdd.push(timer);
@@ -67,21 +68,21 @@ none_ CTimerManager::killTimer(ub8_ timerId) {
 	}
 
 	TTimer *timer = (TTimer *) timerId;
-	assert(NOTHING != timer->status);
+	assert(ETimerStatus::NOTHING != timer->status);
 	CAutoLock al(&_mutex);
 
-	if (TO_BE_ADD == timer->status) {
-		timer->status = DELETED;
+	if (ETimerStatus::TO_BE_ADD == timer->status) {
+		timer->status = ETimerStatus::DELETED;
 		_timerRes.reclaim(timer);
 
 		return;
 	}
 
-	if (ADDED != timer->status) {
+	if (ETimerStatus::ADDED != timer->status) {
 		return; // The timer will be deleted or has been deleted
 	}
 
-	timer->status = TO_BE_DEL;
+	timer->status = ETimerStatus::TO_BE_DEL;
 	_queueForDel.push(timer);
 
 	log_debug("CTimerManager::killTimer: time id-%p.", timer);
@@ -93,7 +94,7 @@ bool_ CTimerManager::working() {
 	while (!_queueForAdd.empty()) {
 		TTimer *timer = _queueForAdd.front();
 
-		if (TO_BE_ADD == timer->status) {
+		if (ETimerStatus::TO_BE_ADD == timer->status) {
 			_addTimer(timer);
 		}
 
@@ -103,7 +104,7 @@ bool_ CTimerManager::working() {
 	while (!_queueForDel.empty()) {
 		TTimer *pTimer = _queueForDel.front();
 
-		if (TO_BE_DEL == pTimer->status) {
+		if (ETimerStatus::TO_BE_DEL == pTimer->status) {
 			if (pTimer == _curTimer) {
 				_curTimer = _curTimer->next;
 			}
@@ -178,7 +179,7 @@ none_ CTimerManager::_addTimer(TTimer *timer) {
 		_lastTimer = timer;
 	}
 
-	timer->status = ADDED;
+	timer->status = ETimerStatus::ADDED;
 }
 
 none_ CTimerManager::_delTimer(TTimer *timer) {
@@ -205,6 +206,6 @@ none_ CTimerManager::_delTimer(TTimer *timer) {
 		}
 	}
 
-	timer->status = DELETED;
+	timer->status = ETimerStatus::DELETED;
 	_timerRes.reclaim(timer);
 }
