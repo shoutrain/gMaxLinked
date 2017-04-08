@@ -73,12 +73,12 @@ none_ CTransaction::onDetach() {
 bool_ CTransaction::over(ETransactionExitReason reason, bool_ useQueue) {
 	Message::TPDUOnOver msg;
 
+	memset(&msg, 0, sizeof(Message::TPDUOnOver));
 	msg.header.size = sizeof(Message::TPDUOnOver);
 	msg.header.type = Message::MT_CONTROL;
 	msg.header.cmd = Message::MC_ON_OVER;
 	msg.header.ver = Config::App::PROTOCOL_VERSION;
 	msg.header.lang = Message::ML_CN;
-	msg.header.seq = 0;
 	msg.header.stmp = CBase::now();
 	msg.header.ext = (ub8_) this;
 	msg.reason = (b4_) reason;
@@ -232,14 +232,13 @@ bool_ CTransaction::handlePushMessage(ub1_ ornType, ub8_ ornId, ub8_ ornExtId,
 		ub8_ messageId, const c1_ *json, ub2_ size, ub8_ timestamp) {
 	Message::TPDUPushMsg msg;
 
+	memset(&msg, 0, sizeof(Message::TPDUPushMsg));
 	msg.header.size = sizeof(Message::TPDUPushMsg);
 	msg.header.type = Message::MT_SERVICE;
 	msg.header.cmd = Message::MC_PUSH_MSG;
 	msg.header.ver = Config::App::PROTOCOL_VERSION;
 	msg.header.lang = Message::ML_CN;
-	msg.header.seq = 0;
 	msg.header.stmp = CBase::now();
-	msg.header.ext = 0;
 	msg.ornType = ornType;
 	msg.ornId = ornId;
 	msg.ornExtId = ornExtId;
@@ -306,12 +305,12 @@ bool_ CTransaction::__onTimer(const Message::TPDUOnTimer *msg) {
 			} else {
 				Message::TPDUHeartBeat message;
 
+				memset(&message, 0, sizeof(Message::TPDUHeartBeat));
 				message.header.size = sizeof(Message::TPDUHeartBeat);
 				message.header.type = Message::MT_CONTROL;
 				message.header.cmd = Message::MC_HEART_BEAT;
 				message.header.ver = Config::App::PROTOCOL_VERSION;
 				message.header.lang = 1;
-				message.header.seq = 0;
 
 				__send((Message::TMsg *) &message, false_v);
 				_heartbeat = false_v;

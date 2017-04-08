@@ -108,12 +108,12 @@ bool_ CTransactionManager::__onTimer(ub8_ timerId, obj_ parameterI,
 
 	Message::TPDUOnTimer msg;
 
+	memset(&msg, 0, sizeof(Message::TPDUOnTimer));
 	msg.header.size = sizeof(Message::TPDUOnTimer);
 	msg.header.type = Message::MT_CONTROL;
 	msg.header.cmd = Message::MC_ON_TIMER;
 	msg.header.ver = Config::App::PROTOCOL_VERSION;
-	msg.header.lang = 1;
-	msg.header.seq = 0;
+	msg.header.lang = Message::ML_CN;
 	msg.header.stmp = CBase::now();
 	msg.header.ext = (ub8_) transaction;
 	msg.timerId = (ub8_) timerId;

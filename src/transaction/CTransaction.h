@@ -104,7 +104,7 @@ protected:
 	// Called by CNodeGroup thread
 	bool_ __onStop(const Message::TPDUOnOver *data);
 
-	// Cassed by CNodeGroup thread
+	// Called by CNodeGroup thread
 	bool_ __send(Message::TMsg *msg, bool_ waitAck);
 
 private:
