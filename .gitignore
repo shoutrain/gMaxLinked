@@ -7,5 +7,5 @@
 .cproject
 .project
 .settings/
-.deps/
+*/.deps/
 gMaxLinked

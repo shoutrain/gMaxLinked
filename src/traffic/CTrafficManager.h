@@ -11,12 +11,12 @@
 #ifndef _C_TRAFFIC_MANAGER_H_
 #define _C_TRAFFIC_MANAGER_H_
 
-#include "../common/IWorkable.h"
-#include "../common/CWorker.h"
-#include "../common/CResource.h"
-#include "../common/CMutex.h"
-
 #include <queue>
+
+#include "../common/CMutex.h"
+#include "../common/CResource.h"
+#include "../common/CWorker.h"
+#include "../common/IWorkable.h"
 
 class CTransactionMangaer;
 class CNode;
@@ -24,48 +24,48 @@ class CNodeGroup;
 
 typedef std::queue<CNode *> NodeQueue;
 
-class CTrafficManager: public CBase, public IWorkable {
+class CTrafficManager : public CBase, public IWorkable {
 public:
-	static CTrafficManager *instance();
-	static none_ destory();
+    static CTrafficManager *instance();
+    static none_ destory();
 
-	none_ work();
+    none_ work();
 
-	// called by CNodeGroup thread
-	none_ recycleNode(CNode *node);
+    // called by CNodeGroup thread
+    none_ recycleNode(CNode *node);
 
-	virtual bool_ working();
+    virtual bool_ working();
 
 private:
-	static CTrafficManager *_tm;
+    static CTrafficManager *_tm;
 
-	CTrafficManager();
-	virtual ~CTrafficManager();
+    CTrafficManager();
+    virtual ~CTrafficManager();
 
-	none_ _addNodes();
-	none_ _delNode(CNode *node);
+    none_ _addNodes();
+    none_ _delNode(CNode *node);
 
-	static none_ _setNonBlocking(b4_ socket);
+    static none_ _setNonBlocking(b4_ socket);
 
-	CNodeGroup *_allocateGroup();
+    CNodeGroup *_allocateGroup();
 
-	bool_ _running;
+    bool_ _running;
 
-	b4_ _listenFd;
-	b4_ _epollFd;
+    b4_ _listenFd;
+    b4_ _epollFd;
 
-	// store all nodes
-	CResource<CNode, CTrafficManager> _res;
+    // store all nodes
+    CResource<CNode, CTrafficManager> _res;
 
-	// store all groups
-	CNodeGroup *_groups;
-	ub4_ _curGroupIndex;
+    // store all groups
+    CNodeGroup *_groups;
+    ub4_ _curGroupIndex;
 
-	CWorker _worker;
+    CWorker _worker;
 
-	// store all nodes which will be recycled
-	NodeQueue _nodeQueue;
-	CMutex _mutex;
+    // store all nodes which will be recycled
+    NodeQueue _nodeQueue;
+    CMutex _mutex;
 };
 
-#endif // _C_TRAFFIC_MANAGER_H_
+#endif  // _C_TRAFFIC_MANAGER_H_

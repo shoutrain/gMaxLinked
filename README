@@ -8,7 +8,9 @@ gMaxLinked only work on linux 64-bit(I compile and run the application on CentOS
 
 Following libs is necessary for gMaxLinked:
 > pthread
-> hiredis
-> log4c
+> hiredis(Ubuntu: apt install libhiredis-dev)
+> log4c(Ubuntu: apt install liblog4c-dev)
 
-Plase use SCons to build the project.
+Plase use SCons(Ubuntu: apt install scons) to build the project.
+
+Code Style: { BasedOnStyle: Google, UseTab: Never, IndentWidth: 4, TabWidth: 4, AccessModifierOffset: -4, NamespaceIndentation: All }

@@ -8,62 +8,60 @@
  ============================================================================
  */
 
-
 #include "CMutex.h"
 
 #include <sys/errno.h>
 
 CMutex::CMutex(bool_ recursive) {
-	pthread_mutexattr_t attr;
+    pthread_mutexattr_t attr;
 
-	pthread_mutexattr_init(&attr);
+    pthread_mutexattr_init(&attr);
 
-	if (recursive) {
-		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
-	}
+    if (recursive) {
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
+    }
 
-	if (0 != pthread_mutex_init(&_mutex, &attr)) {
-		log_fatal("CMutex::CMutex: failed to call pthread_mutex_init");
-	}
+    if (0 != pthread_mutex_init(&_mutex, &attr)) {
+        log_fatal("CMutex::CMutex: failed to call pthread_mutex_init");
+    }
 
-	pthread_mutexattr_destroy(&attr);
+    pthread_mutexattr_destroy(&attr);
 }
 
 CMutex::~CMutex() {
-	if (0 != pthread_mutex_destroy(&_mutex)) {
-		log_fatal("CMutex::~CMutex: failed to call pthread_mutex_destroy");
-	}
+    if (0 != pthread_mutex_destroy(&_mutex)) {
+        log_fatal("CMutex::~CMutex: failed to call pthread_mutex_destroy");
+    }
 }
 
 bool_ CMutex::lock(bool_ check) {
-	b4_ ret = 0;
+    b4_ ret = 0;
 
-	if (check) {
-		ret = pthread_mutex_trylock(&_mutex);
-	} else {
-		ret = pthread_mutex_lock(&_mutex);
-	}
+    if (check) {
+        ret = pthread_mutex_trylock(&_mutex);
+    } else {
+        ret = pthread_mutex_lock(&_mutex);
+    }
 
-	if (EBUSY == ret && check) {
-		return false_v;
-	}
+    if (EBUSY == ret && check) {
+        return false_v;
+    }
 
-	if (0 != ret) {
-		if (check) {
-			log_fatal("CMutex::Lock: failed to call pthread_mutext_trylock");
-		} else {
-			log_fatal("CMutex::Lock: failed to call pthread_mutext_lock");
-		}
+    if (0 != ret) {
+        if (check) {
+            log_fatal("CMutex::Lock: failed to call pthread_mutext_trylock");
+        } else {
+            log_fatal("CMutex::Lock: failed to call pthread_mutext_lock");
+        }
 
-		return false_v;
-	}
+        return false_v;
+    }
 
-	return true_v;
+    return true_v;
 }
 
 none_ CMutex::unlock() {
-	if (0 != pthread_mutex_unlock(&_mutex)) {
-		log_fatal("CMutex::Unlock: failed to call pthread_mutex_unlock");
-	}
+    if (0 != pthread_mutex_unlock(&_mutex)) {
+        log_fatal("CMutex::Unlock: failed to call pthread_mutex_unlock");
+    }
 }
-

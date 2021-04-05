@@ -13,113 +13,111 @@
 #include "../common/CAutoLock.h"
 #include "../config/Config.h"
 #include "../traffic/CNode.h"
-#include "../traffic/Message.h"
 #include "../traffic/CTrafficManager.h"
+#include "../traffic/Message.h"
 
 CTransactionManager *CTransactionManager::_tm = null_v;
 
 CTransactionManager *CTransactionManager::instance() {
-	if (!_tm) {
-		_tm = new CTransactionManager();
-	}
+    if (!_tm) {
+        _tm = new CTransactionManager();
+    }
 
-	return _tm;
+    return _tm;
 }
 
-CTransactionManager::CTransactionManager() :
-		CTimerManager(Config::App::TOTAL_SUPPORT_USER_NUM * 8,
-				Config::App::THREAD_STACK_SIZE) {
-}
+CTransactionManager::CTransactionManager()
+    : CTimerManager(Config::App::TOTAL_SUPPORT_USER_NUM * 8,
+                    Config::App::THREAD_STACK_SIZE) {}
 
-CTransactionManager::~CTransactionManager() {
-}
+CTransactionManager::~CTransactionManager() {}
 
-none_ CTransactionManager::work() {
-	CTrafficManager::instance()->work();
-}
+none_ CTransactionManager::work() { CTrafficManager::instance()->work(); }
 
 CTransaction *CTransactionManager::findTransaction(const c1_ *sessionId) {
-	assert(sessionId);
-	CAutoLock al(&_mutex);
+    assert(sessionId);
+    CAutoLock al(&_mutex);
 
-	TransactionMap::iterator pos = _transactionMap.find(sessionId);
+    TransactionMap::iterator pos = _transactionMap.find(sessionId);
 
-	if (_transactionMap.end() == pos) {
-		return null_v;
-	} else {
-		return pos->second;
-	}
+    if (_transactionMap.end() == pos) {
+        return null_v;
+    } else {
+        return pos->second;
+    }
 }
 
 bool_ CTransactionManager::registerTransaction(CTransaction *transaction) {
-	assert(transaction);
-	CAutoLock al(&_mutex);
+    assert(transaction);
+    CAutoLock al(&_mutex);
 
-	const c1_ *sessionId = transaction->getSessionId();
-	ub8_ id = transaction->getId();
+    const c1_ *sessionId = transaction->getSessionId();
+    ub8_ id = transaction->getId();
 
-	TransactionMap::iterator pos = _transactionMap.find(sessionId);
+    TransactionMap::iterator pos = _transactionMap.find(sessionId);
 
-	if (_transactionMap.end() != pos) {
-		return false_v;
-	}
+    if (_transactionMap.end() != pos) {
+        return false_v;
+    }
 
-	_transactionMap[sessionId] = transaction;
-	log_info("[%p]CTransactionManager::registerTransaction: transaction "
-			"sessionId-%s, id-%lu, total registered transactions-%lu",
-			transaction, sessionId, id, _transactionMap.size());
+    _transactionMap[sessionId] = transaction;
+    log_info(
+        "[%p]CTransactionManager::registerTransaction: transaction "
+        "sessionId-%s, id-%llu, total registered transactions-%lu",
+        transaction, sessionId, id, _transactionMap.size());
 
-	return true_v;
+    return true_v;
 }
 
 bool_ CTransactionManager::unregisterTransaction(CTransaction *transaction) {
-	assert(transaction);
-	CAutoLock al(&_mutex);
+    assert(transaction);
+    CAutoLock al(&_mutex);
 
-	const c1_ *sessionId = transaction->getSessionId();
-	ub8_ id = transaction->getId();
+    const c1_ *sessionId = transaction->getSessionId();
+    ub8_ id = transaction->getId();
 
-	if (0 == sessionId[0]) {
-		return false_v;
-	}
+    if (0 == sessionId[0]) {
+        return false_v;
+    }
 
-	TransactionMap::iterator pos = _transactionMap.find(sessionId);
+    TransactionMap::iterator pos = _transactionMap.find(sessionId);
 
-	if (_transactionMap.end() == pos) {
-		return false_v;
-	}
+    if (_transactionMap.end() == pos) {
+        return false_v;
+    }
 
-	assert(transaction == pos->second);
-	_transactionMap.erase(pos);
-	log_info("[%p]CTransactionManager::unregisterTransaction: transaction "
-			"sessionId-%s, id-%lu, total registered transactions-%lu",
-			transaction, sessionId, id, _transactionMap.size());
+    assert(transaction == pos->second);
+    _transactionMap.erase(pos);
+    log_info(
+        "[%p]CTransactionManager::unregisterTransaction: transaction "
+        "sessionId-%s, id-%llu, total registered transactions-%lu",
+        transaction, sessionId, id, _transactionMap.size());
 
-	return true_v;
+    return true_v;
 }
 
 bool_ CTransactionManager::__onTimer(ub8_ timerId, obj_ parameterI,
-		obj_ parameterII) {
-	assert(parameterI);
-	CTransaction *transaction = (CTransaction *) parameterI;
+                                     obj_ parameterII) {
+    assert(parameterI);
+    CTransaction *transaction = (CTransaction *)parameterI;
 
-	log_debug("[%p]CTransactionManager::onTimer: timer id-%p", transaction,
-			(obj_ )timerId);
+    log_debug("[%p]CTransactionManager::onTimer: timer id-%p", transaction,
+              (obj_)timerId);
 
-	Message::TPDUOnTimer msg;
+    Message::TPDUOnTimer msg;
 
-	msg.header.size = sizeof(Message::TPDUOnTimer);
-	msg.header.type = Message::MT_CONTROL;
-	msg.header.cmd = Message::MC_ON_TIMER;
-	msg.header.ver = Config::App::PROTOCOL_VERSION;
-	msg.header.lang = 1;
-	msg.header.seq = 0;
-	msg.header.stmp = CBase::now();
-	msg.header.ext = (ub8_) transaction;
-	msg.timerId = (ub8_) timerId;
-	msg.parameter = (ub8_) parameterII;
+    msg.header.size = sizeof(Message::TPDUOnTimer);
+    msg.header.type = Message::MT_CONTROL;
+    msg.header.cmd = Message::MC_ON_TIMER;
+    msg.header.ver = Config::App::PROTOCOL_VERSION;
+    msg.header.lang = 1;
+    msg.header.seq = 0;
+    msg.header.stmp = CBase::now();
+    msg.header.ext = (ub8_)transaction;
+    msg.timerId = (ub8_)timerId;
+    msg.parameter = (ub8_)parameterII;
 
-	transaction->getNode()->getGroup()->putMessage((Message::TMsg *) &msg);
+    transaction->getNode()->getGroup()->putMessage((Message::TMsg *)&msg);
 
-	return true_v;
+    return true_v;
 }

@@ -11,43 +11,44 @@
 #ifndef _C_TRANSACTION_MANAGER_H_
 #define _C_TRANSACTION_MANAGER_H_
 
-#include "../common/CTimerManager.h"
 #include "../common/CMutex.h"
+#include "../common/CTimerManager.h"
 
 class CTransaction;
 
 #include <string.h>
+
 #include <map>
 
 struct StrCmp {
-	bool operator()(const c1_ *keyLeft, const c1_ *keyRight) const {
-		return strcmp(keyLeft, keyRight) < 0;
-	}
+    bool operator()(const c1_ *keyLeft, const c1_ *keyRight) const {
+        return strcmp(keyLeft, keyRight) < 0;
+    }
 };
 
 typedef std::map<const c1_ *, CTransaction *, StrCmp> TransactionMap;
 
-class CTransactionManager: public CTimerManager {
+class CTransactionManager : public CTimerManager {
 public:
-	static CTransactionManager *instance();
+    static CTransactionManager *instance();
 
-	none_ work();
+    none_ work();
 
-	CTransaction *findTransaction(const c1_ *sessionId);
-	bool_ registerTransaction(CTransaction *transaction);
-	bool_ unregisterTransaction(CTransaction *transaction);
+    CTransaction *findTransaction(const c1_ *sessionId);
+    bool_ registerTransaction(CTransaction *transaction);
+    bool_ unregisterTransaction(CTransaction *transaction);
 
 protected:
-	bool_ __onTimer(ub8_ timerId, obj_ parameterI, obj_ parameterII);
+    bool_ __onTimer(ub8_ timerId, obj_ parameterI, obj_ parameterII);
 
 private:
-	CTransactionManager();
-	virtual ~CTransactionManager();
+    CTransactionManager();
+    virtual ~CTransactionManager();
 
-	static CTransactionManager *_tm;
+    static CTransactionManager *_tm;
 
-	TransactionMap _transactionMap;
-	CMutex _mutex;
+    TransactionMap _transactionMap;
+    CMutex _mutex;
 };
 
-#endif // _C_TRANSACTION_MANAGER_H_
+#endif  // _C_TRANSACTION_MANAGER_H_

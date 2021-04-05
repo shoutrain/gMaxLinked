@@ -25,16 +25,13 @@ typedef double fb8_;
 
 typedef char c1_;
 
-typedef enum {
-	false_v,
-	true_v
-} bool_;
+typedef enum { false_v, true_v } bool_;
 
 #define null_v nullptr
 
 typedef void none_;
-typedef void * obj_;
+typedef void* obj_;
 
 #include <assert.h>
 
-#endif // _BASE_TYPE_H_
+#endif  // _BASE_TYPE_H_

@@ -12,44 +12,40 @@
 #define _C_WORKER_H_
 
 #include "CBase.h"
-#include "CMutex.h"
 #include "CCond.h"
+#include "CMutex.h"
 
 class IWorkable;
 
-class CWorker: public CBase {
+class CWorker : public CBase {
 public:
-	CWorker(ub4_ threadStackSize /* k */);
-	virtual ~CWorker();
+    CWorker(ub4_ threadStackSize /* k */);
+    virtual ~CWorker();
 
-	// sync is invalid unless bInformed = true_v
-	none_ work(IWorkable *workable, bool_ informed = false_v,
-			bool_ sync = false_v);
+    // sync is invalid unless bInformed = true_v
+    none_ work(IWorkable* workable, bool_ informed = false_v,
+               bool_ sync = false_v);
 
-	static none_ stop() {
-		_workingCondition = false_v;
-	}
+    static none_ stop() { _workingCondition = false_v; }
 
-	static ub4_ getTotalNum() {
-		return _workerNum;
-	}
+    static ub4_ getTotalNum() { return _workerNum; }
 
 private:
-	static obj_ _run(obj_ object);
+    static obj_ _run(obj_ object);
 
-	static CMutex _mutexWorker;
-	static ub4_ _workerNum;
-	static bool_ _workingCondition;
+    static CMutex _mutexWorker;
+    static ub4_ _workerNum;
+    static bool_ _workingCondition;
 
-	bool_ createThread();
+    bool_ createThread();
 
-	ub4_ _threadStackSize; // k
-	pthread_t _handle;
-	bool_ _informed;
-	CMutex _mutexInformed;
-	CCond _condInformed;
+    ub4_ _threadStackSize;  // k
+    pthread_t _handle;
+    bool_ _informed;
+    CMutex _mutexInformed;
+    CCond _condInformed;
 
-	IWorkable *_workable;
+    IWorkable* _workable;
 };
 
-#endif // _C_WORKER_H_
+#endif  // _C_WORKER_H_

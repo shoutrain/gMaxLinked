@@ -13,16 +13,16 @@
 
 namespace Length {
 
-const ub4_ NAME = 32;
-const ub4_ PASSWORD = 32;
-const ub4_ IP_V4 = 15;
-const ub4_ URL = 256;
-const ub4_ PATH = 256;
+    const ub4_ NAME = 32;
+    const ub4_ PASSWORD = 32;
+    const ub4_ IP_V4 = 15;
+    const ub4_ URL = 256;
+    const ub4_ PATH = 256;
 
-// define your lengths here
-const ub4_ SESSION_ID = 16;
-const ub4_ JSON = 384; // 256 + 128
+    // define your lengths here
+    const ub4_ SESSION_ID = 16;
+    const ub4_ JSON = 384;  // 256 + 128
 
-}
+}  // namespace Length
 
-#endif // _LENGTH_H_
+#endif  // _LENGTH_H_

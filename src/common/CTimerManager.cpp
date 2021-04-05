@@ -9,203 +9,204 @@
  */
 
 #include "CTimerManager.h"
-#include "CAutoLock.h"
 
 #include <sys/time.h>
 
-CTimerManager::CTimerManager(ub4_ maxTimerNum, ub4_ threadStackSize) :
-		_worker(threadStackSize), _mutex(true_v), _timerRes(maxTimerNum,
-				&_mutex) {
-	_timerList = null_v;
-	_lastTimer = null_v;
-	_curTimer = null_v;
+#include "CAutoLock.h"
 
-	_worker.work(this, true_v);
+CTimerManager::CTimerManager(ub4_ maxTimerNum, ub4_ threadStackSize)
+    : _worker(threadStackSize),
+      _mutex(true_v),
+      _timerRes(maxTimerNum, &_mutex) {
+    _timerList = null_v;
+    _lastTimer = null_v;
+    _curTimer = null_v;
+
+    _worker.work(this, true_v);
 }
 
-CTimerManager::~CTimerManager() {
-}
+CTimerManager::~CTimerManager() {}
 
 ub8_ CTimerManager::setTimer(ub4_ period, obj_ parameterI, obj_ parameterII,
-		ub4_ times) {
-	TTimer *timer = _timerRes.allocate();
+                             ub4_ times) {
+    TTimer *timer = _timerRes.allocate();
 
-	if (null_v == timer) {
-		log_crit("CTimerManager::setTimer: no more timers can be allocated");
+    if (null_v == timer) {
+        log_crit("CTimerManager::setTimer: no more timers can be allocated");
 
-		return 0;
-	}
+        return 0;
+    }
 
-	assert(ETimerStatus::NOTHING == timer->status
-			|| ETimerStatus::DELETED == timer->status);
-	struct timeval curTime;
-	gettimeofday(&curTime, null_v);
+    assert(ETimerStatus::NOTHING == timer->status ||
+           ETimerStatus::DELETED == timer->status);
+    struct timeval curTime;
+    gettimeofday(&curTime, null_v);
 
-	timer->period = period;
-	timer->parameterI = parameterI;
-	timer->parameterII = parameterII;
-	timer->times = times;
-	timer->baseS = curTime.tv_sec;
-	timer->baseUS = curTime.tv_usec;
-	timer->previous = null_v;
-	timer->next = null_v;
-	timer->status = ETimerStatus::TO_BE_ADD;
+    timer->period = period;
+    timer->parameterI = parameterI;
+    timer->parameterII = parameterII;
+    timer->times = times;
+    timer->baseS = curTime.tv_sec;
+    timer->baseUS = curTime.tv_usec;
+    timer->previous = null_v;
+    timer->next = null_v;
+    timer->status = ETimerStatus::TO_BE_ADD;
 
-	_mutex.lock();
-	_queueForAdd.push(timer);
-	_mutex.unlock();
+    _mutex.lock();
+    _queueForAdd.push(timer);
+    _mutex.unlock();
 
-	log_debug("CTimerManager::setTimer: time id-%p, period-%uSec, times-%u",
-			timer, period, times);
+    log_debug("CTimerManager::setTimer: time id-%p, period-%uSec, times-%u",
+              timer, period, times);
 
-	return (ub8_) timer;
+    return (ub8_)timer;
 }
 
 none_ CTimerManager::killTimer(ub8_ timerId) {
-	assert(timerId > 0);
-	if (0 == timerId) {
-		return;
-	}
+    assert(timerId > 0);
+    if (0 == timerId) {
+        return;
+    }
 
-	TTimer *timer = (TTimer *) timerId;
-	assert(ETimerStatus::NOTHING != timer->status);
-	CAutoLock al(&_mutex);
+    TTimer *timer = (TTimer *)timerId;
+    assert(ETimerStatus::NOTHING != timer->status);
+    CAutoLock al(&_mutex);
 
-	if (ETimerStatus::TO_BE_ADD == timer->status) {
-		timer->status = ETimerStatus::DELETED;
-		_timerRes.reclaim(timer);
+    if (ETimerStatus::TO_BE_ADD == timer->status) {
+        timer->status = ETimerStatus::DELETED;
+        _timerRes.reclaim(timer);
 
-		return;
-	}
+        return;
+    }
 
-	if (ETimerStatus::ADDED != timer->status) {
-		return; // The timer will be deleted or has been deleted
-	}
+    if (ETimerStatus::ADDED != timer->status) {
+        return;  // The timer will be deleted or has been deleted
+    }
 
-	timer->status = ETimerStatus::TO_BE_DEL;
-	_queueForDel.push(timer);
+    timer->status = ETimerStatus::TO_BE_DEL;
+    _queueForDel.push(timer);
 
-	log_debug("CTimerManager::killTimer: time id-%p.", timer);
+    log_debug("CTimerManager::killTimer: time id-%p.", timer);
 }
 
 bool_ CTimerManager::working() {
-	_mutex.lock();
+    _mutex.lock();
 
-	while (!_queueForAdd.empty()) {
-		TTimer *timer = _queueForAdd.front();
+    while (!_queueForAdd.empty()) {
+        TTimer *timer = _queueForAdd.front();
 
-		if (ETimerStatus::TO_BE_ADD == timer->status) {
-			_addTimer(timer);
-		}
+        if (ETimerStatus::TO_BE_ADD == timer->status) {
+            _addTimer(timer);
+        }
 
-		_queueForAdd.pop();
-	}
+        _queueForAdd.pop();
+    }
 
-	while (!_queueForDel.empty()) {
-		TTimer *pTimer = _queueForDel.front();
+    while (!_queueForDel.empty()) {
+        TTimer *pTimer = _queueForDel.front();
 
-		if (ETimerStatus::TO_BE_DEL == pTimer->status) {
-			if (pTimer == _curTimer) {
-				_curTimer = _curTimer->next;
-			}
+        if (ETimerStatus::TO_BE_DEL == pTimer->status) {
+            if (pTimer == _curTimer) {
+                _curTimer = _curTimer->next;
+            }
 
-			_delTimer(pTimer);
-		}
+            _delTimer(pTimer);
+        }
 
-		_queueForDel.pop();
-	}
+        _queueForDel.pop();
+    }
 
-	_mutex.unlock();
+    _mutex.unlock();
 
-	struct timeval curTime;
-	gettimeofday(&curTime, null_v);
+    struct timeval curTime;
+    gettimeofday(&curTime, null_v);
 
-	if (null_v == _curTimer) {
-		if (null_v == _timerList) {
-			// Sleep for 0.1s
-			sleep(0, 100);
+    if (null_v == _curTimer) {
+        if (null_v == _timerList) {
+            // Sleep for 0.1s
+            sleep(0, 100);
 
-			return true_v;
-		}
+            return true_v;
+        }
 
-		_curTimer = _timerList;
-	}
+        _curTimer = _timerList;
+    }
 
-	b4_ i = _curTimer->period + _curTimer->baseS;
+    b4_ i = _curTimer->period + _curTimer->baseS;
 
-	if ((i < curTime.tv_sec)
-			|| (i == curTime.tv_sec && _curTimer->baseUS <= curTime.tv_usec)) {
-		if (__onTimer((ub8_) _curTimer, _curTimer->parameterI,
-				_curTimer->parameterII)) {
-			_curTimer->baseS = curTime.tv_sec;
-			_curTimer->baseUS = curTime.tv_usec;
+    if ((i < curTime.tv_sec) ||
+        (i == curTime.tv_sec && _curTimer->baseUS <= curTime.tv_usec)) {
+        if (__onTimer((ub8_)_curTimer, _curTimer->parameterI,
+                      _curTimer->parameterII)) {
+            _curTimer->baseS = curTime.tv_sec;
+            _curTimer->baseUS = curTime.tv_usec;
 
-			if (0 != _curTimer->times) {
-				_curTimer->times--;
+            if (0 != _curTimer->times) {
+                _curTimer->times--;
 
-				if (0 == _curTimer->times) {
-					TTimer *pCurTimer = _curTimer;
+                if (0 == _curTimer->times) {
+                    TTimer *pCurTimer = _curTimer;
 
-					_curTimer = _curTimer->next;
-					_delTimer(pCurTimer);
+                    _curTimer = _curTimer->next;
+                    _delTimer(pCurTimer);
 
-					return true_v;
-				}
-			}
-		} else {
-			TTimer *pCurTimer = _curTimer;
+                    return true_v;
+                }
+            }
+        } else {
+            TTimer *pCurTimer = _curTimer;
 
-			_curTimer = _curTimer->next;
-			_delTimer(pCurTimer);
+            _curTimer = _curTimer->next;
+            _delTimer(pCurTimer);
 
-			return true_v;
-		}
-	}
+            return true_v;
+        }
+    }
 
-	_curTimer = _curTimer->next;
+    _curTimer = _curTimer->next;
 
-	return true_v;
+    return true_v;
 }
 
 none_ CTimerManager::_addTimer(TTimer *timer) {
-	assert(null_v != timer);
+    assert(null_v != timer);
 
-	if (null_v == _timerList) {
-		assert(null_v == _lastTimer);
-		_lastTimer = _timerList = timer;
-	} else {
-		timer->previous = _lastTimer;
-		_lastTimer->next = timer;
-		_lastTimer = timer;
-	}
+    if (null_v == _timerList) {
+        assert(null_v == _lastTimer);
+        _lastTimer = _timerList = timer;
+    } else {
+        timer->previous = _lastTimer;
+        _lastTimer->next = timer;
+        _lastTimer = timer;
+    }
 
-	timer->status = ETimerStatus::ADDED;
+    timer->status = ETimerStatus::ADDED;
 }
 
 none_ CTimerManager::_delTimer(TTimer *timer) {
-	assert(null_v != timer);
+    assert(null_v != timer);
 
-	if (null_v == timer->previous) {
-		assert(timer == _timerList);
+    if (null_v == timer->previous) {
+        assert(timer == _timerList);
 
-		if (null_v == timer->next) {
-			assert(timer == _lastTimer);
-			_lastTimer = _timerList = null_v;
-		} else {
-			_timerList = timer->next;
-			_timerList->previous = null_v;
-		}
-	} else {
-		if (null_v == timer->next) {
-			assert(timer == _lastTimer);
-			_lastTimer = timer->previous;
-			_lastTimer->next = null_v;
-		} else {
-			timer->previous->next = timer->next;
-			timer->next->previous = timer->previous;
-		}
-	}
+        if (null_v == timer->next) {
+            assert(timer == _lastTimer);
+            _lastTimer = _timerList = null_v;
+        } else {
+            _timerList = timer->next;
+            _timerList->previous = null_v;
+        }
+    } else {
+        if (null_v == timer->next) {
+            assert(timer == _lastTimer);
+            _lastTimer = timer->previous;
+            _lastTimer->next = null_v;
+        } else {
+            timer->previous->next = timer->next;
+            timer->next->previous = timer->previous;
+        }
+    }
 
-	timer->status = ETimerStatus::DELETED;
-	_timerRes.reclaim(timer);
+    timer->status = ETimerStatus::DELETED;
+    _timerRes.reclaim(timer);
 }
